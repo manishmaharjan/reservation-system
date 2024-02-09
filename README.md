@@ -28,3 +28,15 @@ python populationScript.py
 ```
 
 After that, our database will be created and populated with a few instances of each model.
+
+To see those instances, we can run the following lines in a python console.
+```
+from models import Room,Reservation,User, db
+from app import app
+ctx = app.app_context()
+ctx.push()
+db.create_all()
+Room.query.first()
+```
+With that last line a Room object called 'Room 1' should be retrieved.
+
