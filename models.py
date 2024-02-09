@@ -14,18 +14,18 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
 
-    reservations = db.relationship('Reservation', back_populates='user')
+    reservations = db.relationship('Reservation', back_populates='user', cascade='all, delete-orphan')
 
 class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_name = db.Column(db.String(100), unique=True, nullable=False)
     capacity = db.Column(db.Integer, nullable=False)
 
-    reservations = db.relationship('Reservation', back_populates ='room')
+    reservations = db.relationship('Reservation', back_populates ='room', cascade='all, delete-orphan')
 class Reservation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('room.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False)
