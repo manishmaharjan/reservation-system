@@ -1,7 +1,8 @@
 from functools import wraps
 from http.client import FORBIDDEN
 from flask import request
-from src.models import *
+from src.models import ApiKey
+from src import db
 
 # Function to verify if the request comes from an admin righted user
 def require_admin(func):

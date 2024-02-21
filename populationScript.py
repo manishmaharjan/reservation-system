@@ -15,9 +15,9 @@ with app.app_context() as ctx:
     room1 = Room(room_name='Room 1', capacity=10)
     room2 = Room(room_name='Room 2', capacity=20)
 
-    token1 = 'Z9udK8CT3Bv_ssND85CXA6qFJBVf6lhIEMDW9sficC4' #secrets.token_urlsafe() 
-    token2 = 'cLENKIlIT39h18gbAkSBNNAjyOTCVUlF5iCUbHnqJBo' #secrets.token_urlsafe()
-    adminTok = 'ddMM0fJfmMBxCt0WdZoqqPKKHuZwptdtgE6-3cYUEns' #secrets.token_urlsafe()
+    token1 = 'Z9udK8CT3Bv_ssND85CXA6qFJBVf6lhIEMDW9sficC4' #ApiKey.create_token()
+    token2 = 'cLENKIlIT39h18gbAkSBNNAjyOTCVUlF5iCUbHnqJBo' #ApiKey.create_token()
+    adminTok = 'ddMM0fJfmMBxCt0WdZoqqPKKHuZwptdtgE6-3cYUEns' #ApiKey.create_token()
     
     api_key1 = ApiKey(key=ApiKey.key_hash(token1), user = user1)
     api_key2 = ApiKey(key=ApiKey.key_hash(token2), user = user2)
