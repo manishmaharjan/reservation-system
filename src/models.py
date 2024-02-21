@@ -1,7 +1,8 @@
-from src.api import db
+from src import db
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
 import hashlib
+import secrets
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
@@ -58,4 +59,7 @@ class ApiKey(db.Model):
     @staticmethod
     def key_hash(key):
         return hashlib.sha256(key.encode()).digest()
+    
+    def create_token():
+        return secrets.token_urlsafe() 
 
