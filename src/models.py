@@ -1,6 +1,7 @@
-from app import db
+from src.api import db
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
+import hashlib
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
@@ -14,6 +15,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
 
     reservations = db.relationship('Reservation', back_populates='user', cascade='all, delete-orphan')
+    api_keys = db.relationship('ApiKey', back_populates='user', cascade='all, delete-orphan')
 
 class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -36,5 +38,24 @@ class Reservation(db.Model):
     room = db.relationship('Room', back_populates = 'reservations')
     user = db.relationship('User', back_populates = 'reservations')
 
+    def serialize(self):
+        doc = {
+            "user": self.user.username,
+            "room": self.room.room_name,
+            "date": self.date.isoformat(),
+            "time-span": f"{self.start_time} - {self.end_time}"
+        }
+        return doc
 
+# Got the code from https://lovelace.oulu.fi/ohjelmoitava-web/ohjelmoitava-web/implementing-rest-apis-with-flask/#validating-keys
+class ApiKey(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(32), nullable=False, unique=True)
+    admin = db.Column(db.Boolean, default=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    user = db.relationship('User', back_populates='api_keys')
+    @staticmethod
+    def key_hash(key):
+        return hashlib.sha256(key.encode()).digest()
 
