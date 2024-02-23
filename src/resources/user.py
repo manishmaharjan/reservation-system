@@ -22,14 +22,15 @@ class RegisterUser(Resource):
         # Check if username or email is missing
         if not username or not email:
             return Response('Username and email are required', status=400)
-
+        
+        # Check email format
+        if not is_valid_email(email):
+            return Response('Incorrect email format', status=409)
+        
         user = User(username=username, email=email)
         token = ApiKey.create_token()
         api_key = ApiKey(key=ApiKey.key_hash(token), user = user)
 
-        # Check email format
-        if not is_valid_email(email):
-            return Response('Incorrect email format', status=409)
         # Add instances to the database
         try:
             db.session.add(user)
