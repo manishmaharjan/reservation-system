@@ -22,6 +22,7 @@ class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_name = db.Column(db.String(100), unique=True, nullable=False)
     capacity = db.Column(db.Integer, nullable=False)
+    max_time = db.Column(db.Integer, nullable=False, default = 120) # Maximun reservation time in minutes
 
     reservations = db.relationship('Reservation', back_populates ='room', cascade='all, delete-orphan')
 class Reservation(db.Model):
