@@ -1,0 +1,4 @@
+src/__pycache__/*
+src/resources/__pycache__/*
+instance/reservation_system.db
+./instance/*

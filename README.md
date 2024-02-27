@@ -20,6 +20,20 @@ We used a SQLite database, specifically the sqlite3 3.37.2 version. The document
 
 Finally, to set up the database we first have to run the app with the next command:
 ```
+
+export FLASK_APP=src  # For Linux/Mac
+set FLASK_APP=src      # For Windows Command Prompt
+export FLASK_DEBUG=1
+export FLASK_ENV=development
+
+# debugging in mac
+
+-pysqlite3 is likely already installed as a default in mac and would be throwing error during pip installation 
+
+-install globally by deactivating venv
+pip install flask-sqlalchemy
+activate venv 
+
 flask run
 ```
 After that, to populate the database we will have to run the population script with the following command:
@@ -27,9 +41,9 @@ After that, to populate the database we will have to run the population script w
 python populationScript.py 
 ```
 
-After that, our database will be created and populated with a few instances of each model.
+After that, our database will be created and populated with a few ins``tances of each model.
 
-To see those instances, we can run the following lines in a python console.
+To see those instances, w``e can run the following lines in a python console.
 ```
 from models import Room,Reservation,User, db
 from app import app

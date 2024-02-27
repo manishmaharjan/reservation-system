@@ -4,8 +4,14 @@ from src.api import app
 
 with app.app_context() as ctx:
     ctx.push()
+
+    # Drop all existing tables
+    db.drop_all()
+
+    # Create tables again
     db.create_all()
 
+    # Create users
     user1 = User(username='user1', email='user1@example.com')
     user2 = User(username='user2', email='user2@example.com')
     admin = User(username='admin', email='admin@example.com')
