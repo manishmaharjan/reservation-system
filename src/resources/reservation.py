@@ -1,11 +1,10 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 from flask_restful import Resource
-from ..decorators import require_user
+from ..decorators import require_user, require_admin
 from datetime import datetime, date, timedelta
 from werkzeug.exceptions import UnsupportedMediaType
-from ..models import Reservation
+from ..models import Reservation, db
 from sqlalchemy import desc
-
 class GetReservations(Resource):
     @require_user
     def get(self, user):
@@ -53,6 +52,24 @@ class CreateReservation(Resource):
         lastReservation = Reservation.query.filter(Reservation.start_time < start_time).order_by(desc(Reservation.start_time)).first()
         
         if lastReservation.end_time > start_time:
-            return Response('Time slot already taken', status=)
+            return Response('Time slot already taken', status=400)
 
-        
+
+
+class DeleteReservation(Resource):
+    @require_user
+    def delete(self, user, room, reservation_id):
+#        reservation = Reservation.query.get(int(reservation_id))
+        reservation = Reservation.query.filter_by(id=reservation_id, user=user, room=room).first()
+        if reservation:
+            db.session.delete(reservation)
+            db.session.commit()
+            return jsonify({'message': 'Reservation deleted successfully'}), 204
+        else:
+            return jsonify({'error': 'Reservation not found'}), 404
+
+class GetReservationList(Resource):
+    @require_admin
+    def get(self):
+        reservations = Reservation.query.all()
+        return jsonify([reservation.serialize() for reservation in reservations])

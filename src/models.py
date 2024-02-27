@@ -1,4 +1,5 @@
-from src import db
+from . import db
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
 import hashlib
@@ -61,6 +62,6 @@ class ApiKey(db.Model):
     def key_hash(key):
         return hashlib.sha256(key.encode()).digest()
     
-    def create_token():
+    def create_token(self):
         return secrets.token_urlsafe() 
 
