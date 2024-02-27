@@ -1,7 +1,6 @@
 from datetime import time, date
 from src.models import Room,Reservation,User, db, ApiKey
 from src.api import app
-import secrets
 
 with app.app_context() as ctx:
     ctx.push()
