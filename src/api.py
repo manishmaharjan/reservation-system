@@ -1,7 +1,8 @@
 from flask_restful import Api
 from src import create_app, db
 from .resources import reservation, user
-from converters import RoomConverter
+from .converters import RoomConverter
+
 app = create_app()
 
 api = Api(app)

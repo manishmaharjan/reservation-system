@@ -1,5 +1,5 @@
 from werkzeug.routing import BaseConverter
-from models import Room
+from .models import Room
 from werkzeug.exceptions import NotFound
 
 class RoomConverter(BaseConverter):
