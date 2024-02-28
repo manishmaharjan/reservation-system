@@ -1,4 +1,4 @@
-from datetime import time, date
+from datetime import time, date, datetime
 from src.models import Room,Reservation,User, db, ApiKey
 from src.api import app
 
@@ -29,8 +29,10 @@ with app.app_context() as ctx:
     api_key_admin = ApiKey(key=ApiKey.key_hash(adminTok), user = admin)
 
     # Create reservations
-    reservation1 = Reservation(room=room1, user=user1, date=date.today(), start_time=time(9, 0), end_time=time(10, 0))
-    reservation2 = Reservation(room=room2, user=user2, date=date.today(), start_time=time(11, 0), end_time=time(12, 0))
+    reservation1 = Reservation(room=room1, user=user1,  start_time=datetime.combine(date.today(), time(9, 2)),
+                                                         end_time=datetime.combine(date.today(), time(10, 2)))
+    reservation2 = Reservation(room=room2, user=user2,  start_time=datetime.combine(date.today(), time(11, 2)),
+                                                        end_time=datetime.combine(date.today(), time(12, 2)))
 
     # Add objects to the session
     db.session.add(user1)
