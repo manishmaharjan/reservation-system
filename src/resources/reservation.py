@@ -66,7 +66,7 @@ class CreateReservation(Resource):
         db.session.add(reservation)
         db.session.commit()
         
-        return Response("Reservation created successfully")
+        return Response("Reservation created successfully", status=209)
     
 class DeleteReservation(Resource):
     @require_user
