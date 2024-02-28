@@ -38,16 +38,16 @@ class CreateReservation(Resource):
             date = datetime.strptime(date, '%Y-%m-%d').date()
             start_time = datetime.combine(date, datetime.strptime(start_time, '%H:%M').time())
             end_time = datetime.combine(date, datetime.strptime(end_time, '%H:%M').time())
-            if end_time.time() < start_time.time(): # In case the reservation is on midnight
-                end_time += timedelta(days=1) 
-            
+            if end_time.time() <= start_time.time(): # In case the reservation is on midnight
+                end_time += timedelta(days=1)
+                print("Terves")
         except ValueError:
             return Response('Invalid date or time format. Date format: YYYY-MM-DD. Time format: HH:MM', status=400)
-        
+
         if start_time < datetime.now():
             return Response('Can not book past time slots', status=409)
         
-        total_minutes = (end_time - start_time).seconds // 60
+        total_minutes = (end_time - start_time).total_seconds() // 60
 
         if total_minutes > room.max_time:
             return Response('Reservation is too long.', status=409)
@@ -67,3 +67,14 @@ class CreateReservation(Resource):
         db.session.commit()
         
         return Response("Reservation created successfully")
+    
+class DeleteReservation(Resource):
+    @require_user
+    def delete(self, user, room, reservation_id):
+        reservation = Reservation.query.filter_by(id=reservation_id, user=user, room=room).first()
+        if reservation:
+            db.session.delete(reservation)
+            db.session.commit()
+            return Response("Reservation deleted successfully", status=204)
+        else:
+            return Response("Reservation not found", status=404)
