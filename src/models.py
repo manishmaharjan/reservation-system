@@ -1,14 +1,9 @@
-<<<<<<< Updated upstream
-from . import db
-from flask_sqlalchemy import SQLAlchemy
-=======
 """
 modules
 """
 import hashlib
 import secrets
 from src import db
->>>>>>> Stashed changes
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
 
@@ -43,8 +38,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
 
     reservations = db.relationship('Reservation',
-                                back_populates='user',
-                                cascade='all, delete-orphan')
+                                   back_populates='user',
+                                   cascade='all, delete-orphan')
     api_keys = db.relationship('ApiKey', back_populates='user', cascade='all, delete-orphan')
 
 class Room(db.Model):
@@ -64,8 +59,8 @@ class Room(db.Model):
     max_time = db.Column(db.Integer, nullable=False, default=180)
 
     reservations = db.relationship('Reservation',
-                                    back_populates='room',
-                                    cascade='all, delete-orphan')
+                                   back_populates='room',
+                                   cascade='all, delete-orphan')
 
 class Reservation(db.Model):
     """
@@ -134,15 +129,8 @@ class ApiKey(db.Model):
 
     @staticmethod
     def key_hash(key):
-<<<<<<< Updated upstream
-        return hashlib.sha256(key.encode()).digest()
-    
-    def create_token(self):
-        return secrets.token_urlsafe() 
-=======
         """
         Hashes the given key using SHA-256 algorithm.
->>>>>>> Stashed changes
 
         Args:
             key (str): The key to be hashed.
