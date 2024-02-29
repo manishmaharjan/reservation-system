@@ -23,19 +23,18 @@ class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_name = db.Column(db.String(100), unique=True, nullable=False)
     capacity = db.Column(db.Integer, nullable=False)
-    max_time = db.Column(db.Integer, nullable=False, default = 120) # Maximun reservation time in minutes
+    max_time = db.Column(db.Integer, nullable=False, default = 180) # Maximun reservation time in minutes
 
     reservations = db.relationship('Reservation', back_populates ='room', cascade='all, delete-orphan')
 class Reservation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.Integer, db.ForeignKey('room.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
-    date = db.Column(db.Date, nullable=False)
-    start_time = db.Column(db.Time, nullable=False)
-    end_time = db.Column(db.Time, nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
+    end_time = db.Column(db.DateTime, nullable=False)
 
     __table_args__ = (
-        db.UniqueConstraint('room_id', 'date', 'start_time', 'end_time'),
+        db.UniqueConstraint('room_id', 'start_time', 'end_time'),
     )
 
     room = db.relationship('Room', back_populates = 'reservations')
@@ -45,8 +44,8 @@ class Reservation(db.Model):
         doc = {
             "user": self.user.username,
             "room": self.room.room_name,
-            "date": self.date.isoformat(),
-            "time-span": f"{self.start_time} - {self.end_time}"
+            "date": self.start_time.date().isoformat(),
+            "time-span": f"{self.start_time.time()} - {self.end_time.time()}"
         }
         return doc
 

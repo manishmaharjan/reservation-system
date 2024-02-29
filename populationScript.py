@@ -1,4 +1,4 @@
-from datetime import time, date, timedelta
+from datetime import time, date, datetime
 from src.models import Room,Reservation,User, db, ApiKey
 from src.api import app
 
@@ -25,14 +25,14 @@ with app.app_context() as ctx:
     adminTok = 'ddMM0fJfmMBxCt0WdZoqqPKKHuZwptdtgE6-3cYUEns' #ApiKey.create_token()
     
     api_key1 = ApiKey(key=ApiKey.key_hash(token1), user = user1)
-    api_key2 = ApiKey(key=ApiKey.key_hash(token2), user=user2)
-    api_key_admin = ApiKey(key=ApiKey.key_hash(adminTok), user=admin)
+    api_key2 = ApiKey(key=ApiKey.key_hash(token2), user = user2)
+    api_key_admin = ApiKey(key=ApiKey.key_hash(adminTok), user = admin)
 
-    # Create dummy reservations
-    reservation1 = Reservation(room=room1, user=user1, date=date.today(), start_time=time(9, 0), end_time=time(10, 0))
-    reservation2 = Reservation(room=room2, user=user2, date=date.today(), start_time=time(11, 0), end_time=time(12, 0))
-    reservation3 = Reservation(room=room1, user=user1, date=date.today() + timedelta(days=1), start_time=time(13, 0), end_time=time(14, 0))
-    reservation4 = Reservation(room=room2, user=user2, date=date.today() + timedelta(days=5), start_time=time(15, 0), end_time=time(16, 0))
+    # Create reservations
+    reservation1 = Reservation(room=room1, user=user1,  start_time=datetime.combine(date.today(), time(9, 2)),
+                                                         end_time=datetime.combine(date.today(), time(10, 2)))
+    reservation2 = Reservation(room=room2, user=user2,  start_time=datetime.combine(date.today(), time(11, 2)),
+                                                        end_time=datetime.combine(date.today(), time(12, 2)))
 
     # Add objects to the session
     db.session.add(user1)
@@ -42,11 +42,11 @@ with app.app_context() as ctx:
     db.session.add(room2)
     db.session.add(reservation1)
     db.session.add(reservation2)
-    db.session.add(reservation3)
-    db.session.add(reservation4)
     db.session.add(api_key1)
     db.session.add(api_key2)
     db.session.add(api_key_admin)
 
     # Commit the changes to the database
     db.session.commit()
+
+
