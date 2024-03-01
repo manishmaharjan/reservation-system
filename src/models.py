@@ -18,7 +18,7 @@ from src import db
 
 
 @event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
+def set_sqlite_pragma(dbapi_connection, _connection_record=None):
     """
     Set the SQLite pragma to enable foreign key constraints.
 
@@ -124,7 +124,8 @@ class Reservation(db.Model):
         return doc
 
 
-# Got the code from https://lovelace.oulu.fi/ohjelmoitava-web/ohjelmoitava-web/implementing-rest-apis-with-flask/#validating-keys
+# Got the code from
+# https://lovelace.oulu.fi/ohjelmoitava-web/ohjelmoitava-web/implementing-rest-apis-with-flask/#validating-keys
 class ApiKey(db.Model):
     """
     Represents an API key in the reservation system.
