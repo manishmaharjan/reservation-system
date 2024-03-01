@@ -1,5 +1,14 @@
 """
-import modules
+This module initializes the Flask application and creates the application factory.
+
+It imports necessary modules and sets up the Flask application with the required configurations.
+The create_app function is the application factory that creates and configures the Flask application
+
+Functions:
+- create_app(test_config=None): Creates and configures the Flask application.
+
+Variables:
+- db: SQLAlchemy object for database operations.
 """
 
 import os

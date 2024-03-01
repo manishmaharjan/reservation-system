@@ -1,5 +1,15 @@
 """
-Import modules
+This module contains the implementation of the User resource and related functions.
+
+The User resource is responsible for handling the registration of new users. It provides
+an endpoint for creating a new user by accepting a JSON payload containing the username
+and email. The module also includes a helper function for validating email addresses.
+
+Classes:
+    RegisterUser: A resource class for registering a new user.
+
+Functions:
+    is_valid_email: Check if the given email address is valid.
 """
 
 import re

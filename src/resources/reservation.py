@@ -1,6 +1,10 @@
 """
+This module contains the resource classes for managing reservations in the reservation system.
 
-Import modules
+It includes the following classes:
+- GetReservations: A resource class for retrieving reservations for a user within a specified date range.
+- CreateReservation: A resource class for creating a new reservation for a user in a specified room.
+- DeleteReservation: A resource class for deleting a reservation for a user in a specified room.
 """
 
 from datetime import date, datetime, timedelta

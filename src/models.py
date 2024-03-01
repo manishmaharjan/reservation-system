@@ -1,5 +1,11 @@
 """
-modules
+This module contains the database models for the reservation system.
+
+It defines the following classes:
+- User: Represents a user in the reservation system.
+- Room: Represents a room in the reservation system.
+- Reservation: Represents a reservation made by a user for a specific room.
+- ApiKey: Represents an API key in the reservation system.
 """
 
 import hashlib
