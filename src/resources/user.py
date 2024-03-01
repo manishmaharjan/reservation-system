@@ -3,8 +3,9 @@ Import modules
 """
 
 import re
+from json import JSONDecodeError
 
-from flask import Flask, Response, request
+from flask import Response, request
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import UnsupportedMediaType
@@ -42,7 +43,7 @@ class RegisterUser(Resource):
 
         try:
             data = request.get_json(force=True)  # Try to parse JSON data
-        except Exception as e:
+        except JSONDecodeError as e:
             return Response(f"Error parsing JSON data: {e}", status=400)
 
         username = data.get("username")
