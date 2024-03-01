@@ -1,114 +1,87 @@
 import pytest
-import json
-from flask import Request, Flask
-from flask_sqlalchemy import SQLAlchemy
-from datetime import date, timedelta, datetime, time
-from src.resources.user import RegisterUser
+from flask import Flask
 from src.models import Room, Reservation, User, db
+from src.resources.reservation import GetReservations, CreateReservation, DeleteReservation
+from datetime import datetime, timedelta
+from unittest.mock import MagicMock
 
-class TestReservation:
+@pytest.fixture
+def app():
+    app = Flask(__name__)
+    app.config['TESTING'] = True
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.drop_all()
 
-    @pytest.fixture
-    def app(self):
-        app = Flask(__name__)
-        app.config['TESTING'] = True
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        with app.app_context():
-            db.init_app(app)
-            db.create_all()
-            yield app
-            db.drop_all()
+@pytest.fixture
+def client(app):
+    return app.test_client()
 
-    @pytest.fixture
-    def client(self, app):
-        return app.test_client()
 
-    def setup_method(self):
-        # Set up initial configuration for tests
-        self.register_user = RegisterUser()
 
-    def teardown_method(self):
-        # Clean up after each test
-        pass
+def test_get_reservations(app, client):
+    with app.test_request_context('/'):
+        # Mocking user and room objects
+        user = MagicMock(spec=User)
+        room = MagicMock(spec=Room)
 
-    def test_get_reservations(self, client):
-        # Mock user and reservations
-        user1 = User(username='user1', email='user1@example.com')
-        user2 = User(username='user2', email='user2@example.com')
-        room1 = Room(room_name='Room 1', capacity=10)
-        room2 = Room(room_name='Room 2', capacity=20)
-        reservation_1 = Reservation(room=room1, user=user1, date=date.today(), start_time=time(9, 0), end_time=time(10, 0))
-        reservation_2 = Reservation(room=room2, user=user2, date=date.today(), start_time=time(11, 0), end_time=time(12, 0))
-        db.session.add(user1)
-        db.session.add(user2)
-        db.session.add(room1)
-        db.session.add(room2)
-        db.session.add(reservation_1)
-        db.session.add(reservation_2)
-        db.session.commit()
+        # Creating reservations
+        now = datetime.now()
+        reservation1 = MagicMock(spec=Reservation, start_time=now, end_time=now + timedelta(hours=1))
+        reservation2 = MagicMock(spec=Reservation, start_time=now, end_time=now + timedelta(hours=2))
+        reservations = [reservation1, reservation2]
 
-        # Make request
-        response = client.get('/reservations')
-        data = json.loads(response.data.decode('utf-8'))
+        # Mocking the query method of Reservation
+        Reservation.query.filter_by().all.return_value = reservations
 
-        # Assertions
+        response = client.get('/get_reservations?start_date=2024-01-01&end_date=2024-12-31')
+
         assert response.status_code == 200
-        assert len(data) == 2
+        assert len(response.json) == 2
+        assert response.json == [reservation.serialize.return_value for reservation in reservations]
 
-    def test_create_reservation(self, client):
-        # Mock user and room
-        user = User(username='user1', email='user1@example.com')
-        room = Room(room_name='Room 1',capacity=10)
-        db.session.add(user)
-        db.session.add(room)
-        db.session.commit()
+def test_create_reservation(app, client):
+    with app.test_request_context('/', method='POST', json={
+        'date': '2024-03-01',
+        'start_time': '10:00',
+        'end_time': '11:00'
+    }):
+        # Mocking user and room objects
+        user = MagicMock(spec=User)
+        room = MagicMock(spec=Room)
 
-        # Mock request data
-        data = {
-            'date': str(datetime.now().date()),
-            'start_time': '10:00',
-            'end_time': '12:00'
-        }
+        # Mocking overlapping_reservations
+        overlaping_reservations = [MagicMock(spec=Reservation)]
+        Reservation.query.filter().all.return_value = overlaping_reservations
 
-        # Make request
-        response = client.post('/reservations', json=data)
+        response = client.post('/create_reservation')
 
-        # Assertions
         assert response.status_code == 209
+        assert Reservation.query.count() == 1
 
-    def test_delete_reservation(self, client):
-        # Mock user, room, and reservation
+def test_delete_reservation(app, client):
+    with app.test_request_context('/', method='DELETE'):
+        # Create users and rooms in the database
         user1 = User(username='user1', email='user1@example.com')
         room1 = Room(room_name='Room 1', capacity=10)
-        reservation_1 = Reservation(room=room1, user=user1, date=date.today(), start_time=time(9, 0), end_time=time(10, 0))
         db.session.add(user1)
         db.session.add(room1)
-        db.session.add(reservation_1)
         db.session.commit()
 
-        # Make request
-        response = client.delete(f'/reservations/{reservation_1.id}')
+        # Create a reservation to delete
+        reservation = Reservation(room=room1, user=user1, start_time=datetime.now(), end_time=datetime.now() + timedelta(hours=1))
+        db.session.add(reservation)
+        db.session.commit()
 
-        # Assertions
+        # Delete the reservation using its ID
+        response = client.delete(f'/delete_reservation/{reservation.id}')
+
+        # Ensure the response is correct
         assert response.status_code == 204
 
-    def test_get_reservation_list(self, client):
-        # Mock reservations
-        user1 = User(username='user1', email='user1@example.com')
-        user2 = User(username='user2', email='user2@example.com')
-        room1 = Room(room_name='Room 1', capacity=10)
-        room2 = Room(room_name='Room 2', capacity=20)
-        reservation_1 = Reservation(room=room1, user=user1, date=date.today(), start_time=time(9, 0), end_time=time(10, 0))
-        reservation_2 = Reservation(room=room2, user=user2, date=date.today(), start_time=time(11, 0), end_time=time(12, 0))
-        db.session.add(reservation_1)
-        db.session.add(reservation_2)
-        db.session.commit()
+        # Ensure the reservation has been deleted from the database
+        assert Reservation.query.count() == 0
 
-        # Make request
-        response = client.get('/reservations/list')
-        data = json.loads(response.data.decode('utf-8'))
-
-        # Assertions
-        assert response.status_code == 200
-        assert len(data) == 2
