@@ -18,7 +18,7 @@ from src import db
 
 
 @event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection):
+def set_sqlite_pragma(dbapi_connection, connection_record):
     """
     Set the SQLite pragma to enable foreign key constraints.
 
