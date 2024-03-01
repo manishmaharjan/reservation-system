@@ -14,6 +14,7 @@ A resource class for deleting a reservation for a user in a specified room.
 """
 
 from datetime import date, datetime, timedelta
+from json import JSONDecodeError
 
 from flask import Response, request
 from flask_restful import Resource
@@ -24,14 +25,13 @@ from src import db
 from ..decorators import require_user
 from ..models import Reservation
 
-# from json import JSONDecodeError
-
 
 class GetReservations(Resource):
     """
     Represents a resource for retrieving reservations.
 
-    This class provides a GET method that retrieves reservations based on the specified start and end dates.
+    This class provides a GET method that retrieves reservations
+     based on the specified start and end dates.
     """
 
     @require_user
@@ -89,23 +89,23 @@ class CreateReservation(Resource):
             raise UnsupportedMediaType()
         try:
             data = request.get_json(force=True)  # Try to parse JSON data
-        except Exception as e:
+        except JSONDecodeError as e:
             return Response(f"Error parsing JSON data: {e}", status=400)
 
-        date = data.get("date")
+        reservation_date = data.get("date")
         start_time = data.get("start_time")
         end_time = data.get("end_time")
 
-        if not date or not start_time or not end_time:
+        if not reservation_date or not start_time or not end_time:
             return Response("Date, start_time and end_time are required", status=400)
         try:
-            # Convert date, start_time, and end_time to datetime Python objects
-            date = datetime.strptime(date, "%Y-%m-%d").date()
+            # Convert reservation_date, start_time, and end_time to datetime Python objects
+            reservation_date = datetime.strptime(reservation_date, "%Y-%m-%d").date()
             start_time = datetime.combine(
-                date, datetime.strptime(start_time, "%H:%M").time()
+                reservation_date, datetime.strptime(start_time, "%H:%M").time()
             )
             end_time = datetime.combine(
-                date, datetime.strptime(end_time, "%H:%M").time()
+                reservation_date, datetime.strptime(end_time, "%H:%M").time()
             )
             if (
                 end_time.time() <= start_time.time()
@@ -195,5 +195,4 @@ class DeleteReservation(Resource):
             db.session.delete(reservation)
             db.session.commit()
             return Response("Reservation deleted successfully", status=204)
-        else:
-            return Response("Reservation not found", status=404)
+        return Response("Reservation not found", status=404)
