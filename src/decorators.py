@@ -7,8 +7,10 @@ Decorators:
 """
 
 from functools import wraps
+
 from flask import request
 from werkzeug.exceptions import Unauthorized
+
 from src import db
 from src.models import ApiKey
 
@@ -22,6 +24,7 @@ def require_admin(func):
     """
 
     def wrapper(*args, **kwargs):
+        # The token will go in a special header named: "Api-key"
         try:
             key_hash = ApiKey.key_hash(request.headers.get("Api-key").strip())
             db_key = ApiKey.query.filter_by(key=key_hash).first()

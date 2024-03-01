@@ -124,6 +124,7 @@ class Reservation(db.Model):
         return doc
 
 
+# Got the code from https://lovelace.oulu.fi/ohjelmoitava-web/ohjelmoitava-web/implementing-rest-apis-with-flask/#validating-keys
 class ApiKey(db.Model):
     """
     Represents an API key in the reservation system.

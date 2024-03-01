@@ -39,6 +39,7 @@ export FLASK_ENV=development
 pip install flask-sqlalchemy
 activate venv
 
+cd src/
 flask run
 ```
 
