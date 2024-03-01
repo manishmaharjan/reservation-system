@@ -1,11 +1,15 @@
 """
 modules
 """
+
 import hashlib
 import secrets
-from src import db
-from sqlalchemy.engine import Engine
+
 from sqlalchemy import event
+from sqlalchemy.engine import Engine
+
+from src import db
+
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection):
@@ -22,6 +26,7 @@ def set_sqlite_pragma(dbapi_connection):
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
 
+
 class User(db.Model):
     """
     Represents a user in the reservation system.
@@ -33,14 +38,18 @@ class User(db.Model):
         reservations (list): A list of reservations made by the user.
         api_keys (list): A list of API keys associated with the user.
     """
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
 
-    reservations = db.relationship('Reservation',
-                                   back_populates='user',
-                                   cascade='all, delete-orphan')
-    api_keys = db.relationship('ApiKey', back_populates='user', cascade='all, delete-orphan')
+    reservations = db.relationship(
+        "Reservation", back_populates="user", cascade="all, delete-orphan"
+    )
+    api_keys = db.relationship(
+        "ApiKey", back_populates="user", cascade="all, delete-orphan"
+    )
+
 
 class Room(db.Model):
     """
@@ -53,14 +62,16 @@ class Room(db.Model):
         max_time (int): The maximum reservation time in minutes.
         reservations (list): The list of reservations associated with the room.
     """
+
     id = db.Column(db.Integer, primary_key=True)
     room_name = db.Column(db.String(100), unique=True, nullable=False)
     capacity = db.Column(db.Integer, nullable=False)
     max_time = db.Column(db.Integer, nullable=False, default=180)
 
-    reservations = db.relationship('Reservation',
-                                   back_populates='room',
-                                   cascade='all, delete-orphan')
+    reservations = db.relationship(
+        "Reservation", back_populates="room", cascade="all, delete-orphan"
+    )
+
 
 class Reservation(db.Model):
     """
@@ -77,17 +88,19 @@ class Reservation(db.Model):
     """
 
     id = db.Column(db.Integer, primary_key=True)
-    room_id = db.Column(db.Integer, db.ForeignKey('room.id', ondelete='CASCADE'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    room_id = db.Column(
+        db.Integer, db.ForeignKey("room.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+    )
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
 
-    __table_args__ = (
-        db.UniqueConstraint('room_id', 'start_time', 'end_time'),
-    )
+    __table_args__ = (db.UniqueConstraint("room_id", "start_time", "end_time"),)
 
-    room = db.relationship('Room', back_populates='reservations')
-    user = db.relationship('User', back_populates='reservations')
+    room = db.relationship("Room", back_populates="reservations")
+    user = db.relationship("User", back_populates="reservations")
 
     def serialize(self):
         """
@@ -100,9 +113,10 @@ class Reservation(db.Model):
             "user": self.user.username,
             "room": self.room.room_name,
             "date": self.start_time.date().isoformat(),
-            "time-span": f"{self.start_time.time()} - {self.end_time.time()}"
+            "time-span": f"{self.start_time.time()} - {self.end_time.time()}",
         }
         return doc
+
 
 class ApiKey(db.Model):
     """
@@ -123,9 +137,9 @@ class ApiKey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(32), nullable=False, unique=True)
     admin = db.Column(db.Boolean, default=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
-    user = db.relationship('User', back_populates='api_keys')
+    user = db.relationship("User", back_populates="api_keys")
 
     @staticmethod
     def key_hash(key):

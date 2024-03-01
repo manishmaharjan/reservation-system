@@ -3,14 +3,17 @@
 Import modules
 """
 
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from json import JSONDecodeError
+
+from flask import Response, request
 from flask_restful import Resource
 from werkzeug.exceptions import UnsupportedMediaType
-from flask import request, Response
+
 from src import db
-from ..models import Reservation
+
 from ..decorators import require_user
+from ..models import Reservation
 
 
 class GetReservations(Resource):
