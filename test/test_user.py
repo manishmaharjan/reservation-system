@@ -1,10 +1,18 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from flask import Request, Flask
+from flask_sqlalchemy import SQLAlchemy
 from src import db
-from src.models import ApiKey
+from src.models import ApiKey, User
 from src.resources.user import RegisterUser
 
+
+@pytest.fixture
+def test_db():
+    # Fixture for SQLAlchemy database
+    # Place initialization code for your database here for tests
+    # Make sure this function returns the correctly configured database object
+    yield db
 
 @pytest.fixture
 def app():  
@@ -22,17 +30,34 @@ def register_user():
     # Create an instance of RegisterUser for testing
     return RegisterUser()
 
-def test_register_user_username_exists(app, client, register_user):
-        with app.test_request_context('/'):
-        # Test registering a user with an existing username
-            with patch('src.resources.user.db.session.add'), \
-                patch('src.resources.user.db.session.rollback'), \
-                patch.object(Request, 'is_json', MagicMock(return_value=True)), \
-                patch.object(Request, 'get_json', return_value={'username': 'existing_user', 'email': 'test@example.com'}):
-        
-                response = register_user.post()
 
-                assert response.status_code == 409
+def test_register_user_success(app, client, register_user):
+    # Test registering a user with valid data
+    with app.test_request_context('/'):
+        with patch('src.models.ApiKey.create_token', return_value='test_token'), \
+                patch('src.resources.user.db.session.add'), \
+                patch('src.resources.user.db.session.commit'), \
+                patch.object(Request, 'is_json', MagicMock(return_value=True)), \
+                patch.object(Request, 'get_json', return_value={'username': 'testuser', 'email': 'test@example.com'}):
+
+            response = register_user.post()
+            assert response.status_code == 201  # User is created successfully
+            assert response.headers.get('api_key') == 'test_token'  # API token is returned
+
+def test_register_user_username_exists(app, client, register_user, test_db):
+    with app.test_request_context('/'):
+    # Create an existing user in the database
+        existing_user = User(username='existing_user', email='test@example.com')
+        test_db.session.add(existing_user)
+        test_db.session.commit()
+    
+        # Call the RegisterUser.post() method with the existing username
+        with app.test_request_context('/', method='POST', json={'username': 'existing_user', 'email': 'test@example.com'}):
+            response = register_user.post()
+
+        # Check that the response status code is 409 (Conflict)
+        assert response.status_code == 409
+
 
 def test_register_user_invalid_json(app, client, register_user):
     with app.test_request_context('/'):
@@ -61,15 +86,3 @@ def test_register_user_invalid_email(app, client, register_user):
             response = register_user.post()
             assert response.status_code == 409  # Incorrect email format
 
-def test_register_user_success(app, client, register_user):
-    # Test registering a user with valid data
-    with app.test_request_context('/'):
-        with patch('src.models.ApiKey.create_token', return_value='test_token'), \
-                patch('src.resources.user.db.session.add'), \
-                patch('src.resources.user.db.session.commit'), \
-                patch.object(Request, 'is_json', MagicMock(return_value=True)), \
-                patch.object(Request, 'get_json', return_value={'username': 'testuser', 'email': 'test@example.com'}):
-
-            response = register_user.post()
-            assert response.status_code == 201  # User is created successfully
-            assert response.headers.get('api_key') == 'test_token'  # API token is returned
