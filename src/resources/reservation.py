@@ -37,13 +37,19 @@ class GetReservations(Resource):
     @require_user
     def get(self, user):
         """
-        Retrieves reservations for a given user within a specified date range.
-
-        Args:
-            user (User): The user for whom to retrieve reservations.
-
-        Returns:
-            list: A list of serialized reservation objects within the specified date range.
+        Retrieves all reservations for a given user.
+        ---
+        tags:
+          - Reservations
+        parameters:
+          - in: header
+            name: user
+            type: string
+            required: true
+            description: The user for whom to retrieve reservations.
+        responses:
+          200:
+            description: A list of all reservations for the specified user.
         """
         start_date = request.args.get("start_date")
         end_date = request.args.get("end_date")
@@ -75,14 +81,35 @@ class CreateReservation(Resource):
     @require_user
     def post(self, user, room):
         """
-        Handles the HTTP POST request for creating a reservation.
-
-        Args:
-        - user: The user making the reservation.
-        - room: The room for which the reservation is being made.
-
-        Returns:
-        - A Response object indicating the status of the reservation creation.
+        Create a new reservation for a given user and room.
+        ---
+        tags:
+          - Reservations
+        parameters:
+          - in: path
+            name: room
+            type: string
+            required: true
+            description: The room for the reservation.
+          - in: body
+            name: body
+            schema:
+              id: Reservation
+              required:
+                - start_date
+                - end_date
+              properties:
+                start_date:
+                  type: string
+                  format: date
+                  description: The start date for the reservation.
+                end_date:
+                  type: string
+                  format: date
+                  description: The end date for the reservation.
+        responses:
+          200:
+            description: Reservation created
         """
         # Code for creating a reservation
         if not request.is_json:
@@ -178,15 +205,24 @@ class DeleteReservation(Resource):
     @require_user
     def delete(self, user, room, reservation_id):
         """
-        Delete a reservation.
-
-        Args:
-            user (str): The user associated with the reservation.
-            room (str): The room associated with the reservation.
-            reservation_id (int): The ID of the reservation to be deleted.
-
-        Returns:
-            Response: A response indicating the status of the deletion operation.
+        Delete a reservation for a given user, room, and reservation ID.
+        ---
+        tags:
+          - Reservations
+        parameters:
+          - in: path
+            name: room
+            type: string
+            required: true
+            description: The room for the reservation.
+          - in: path
+            name: reservation_id
+            type: integer
+            required: true
+            description: The ID of the reservation.
+        responses:
+          200:
+            description: Reservation deleted
         """
         reservation = Reservation.query.filter_by(
             id=reservation_id, user=user, room=room

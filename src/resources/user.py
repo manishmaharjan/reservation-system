@@ -47,6 +47,29 @@ class RegisterUser(Resource):
 
         Returns:
             Response: The response object with the appropriate status code and headers.
+
+        Create a new user
+        ---
+        tags:
+          - Users
+        parameters:
+          - in: body
+            name: body
+            schema:
+              id: User
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: The user's name
+                password:
+                  type: string
+                  description: The user's password
+        responses:
+          200:
+            description: User created
         """
         if not request.is_json:
             raise UnsupportedMediaType("Request must be in JSON format.")
