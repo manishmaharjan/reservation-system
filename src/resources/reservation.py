@@ -43,10 +43,10 @@ class GetReservations(Resource):
           - Reservations
         parameters:
           - in: header
-            name: user
+            name: API-KEY
             type: string
             required: true
-            description: The user for whom to retrieve reservations.
+            description: The user for whom to retrieve reservations using API key for authentication.
         responses:
           200:
             description: A list of all reservations for the specified user.
@@ -86,6 +86,11 @@ class CreateReservation(Resource):
         tags:
           - Reservations
         parameters:
+          - in: header
+            name: API-KEY
+            type: string
+            required: true
+            description: The user for whom to retrieve reservations using API key for authentication.
           - in: path
             name: room
             type: string
@@ -96,17 +101,22 @@ class CreateReservation(Resource):
             schema:
               id: Reservation
               required:
-                - start_date
-                - end_date
+                - date
+                - start_time
+                - end_time
               properties:
-                start_date:
+                date:
                   type: string
                   format: date
-                  description: The start date for the reservation.
-                end_date:
+                  description: The date for the reservation.
+                start_time:
                   type: string
-                  format: date
-                  description: The end date for the reservation.
+                  format: time
+                  description: The start time for the reservation.
+                end_time:
+                  type: string
+                  format: time
+                  description: The end time for the reservation.
         responses:
           200:
             description: Reservation created
@@ -210,6 +220,11 @@ class DeleteReservation(Resource):
         tags:
           - Reservations
         parameters:
+          - in: header
+            name: API-KEY
+            type: string
+            required: true
+            description: The user for whom to retrieve reservations using API key for authentication.
           - in: path
             name: room
             type: string
