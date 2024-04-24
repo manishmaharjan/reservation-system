@@ -20,7 +20,7 @@ from flask import Response, request
 from flask_restful import Resource
 from werkzeug.exceptions import UnsupportedMediaType
 
-from src import db
+from src import db # type: ignore
 
 from ..decorators import require_user
 from ..models import Reservation
@@ -46,7 +46,7 @@ class GetReservations(Resource):
             name: API-KEY
             type: string
             required: true
-            description: The user for whom to retrieve reservations using API key for authentication.
+            description: The user for whom to retrieve reservations using API key for authentication
         responses:
           200:
             description: A list of all reservations for the specified user.
@@ -90,7 +90,7 @@ class CreateReservation(Resource):
             name: API-KEY
             type: string
             required: true
-            description: The user for whom to retrieve reservations using API key for authentication.
+            description: The user for whom to retrieve reservations using API key for authentication
           - in: path
             name: room
             type: string
@@ -224,7 +224,7 @@ class DeleteReservation(Resource):
             name: API-KEY
             type: string
             required: true
-            description: The user for whom to retrieve reservations using API key for authentication.
+            description: The user for whom to retrieve reservations using API key for authentication
           - in: path
             name: room
             type: string
