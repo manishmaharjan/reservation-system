@@ -17,11 +17,13 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_caching import Cache
 from .config import Config
+from .api import setup_routes
 
 db = SQLAlchemy()
 cache = Cache()
 
 def create_app(config_class=Config):
+    """Create and configure the Flask Application"""   
     app = Flask(__name__)
     app.config.from_object(config_class)
 
@@ -29,8 +31,6 @@ def create_app(config_class=Config):
     cache.init_app(app, config={'CACHE_TYPE': 'simple'})
 
     with app.app_context():
-        from .api import setup_routes
-        setup_routes(app)
+       setup_routes(app)
 
     return app
-
