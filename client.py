@@ -1,9 +1,18 @@
-import requests
+"""Module providing function of time"""
+import datetime
 from json import JSONDecodeError
-
+import requests
 
 class ReservationClient:
+    """Class used to reserve rooms by interacting with the API"""
+
     def __init__(self, base_url):
+        """
+        Initialize the ReservationClient with the base URL of the API.
+
+        Args:
+            base_url (str): The base URL of the API.
+        """
         self.base_url = base_url
 
     def get_reservations(self):
@@ -90,3 +99,41 @@ class ReservationClient:
                 return None
         except JSONDecodeError:
             return None
+
+    def create_weekly_reservation(self, room_id, start_date, end_date, start_time, end_time, api_key):
+        """
+        Create weekly reservations for a room using the API.
+
+        Args:
+            room_id (int): The ID of the room to reserve.
+            start_date (str): The start date of the weekly reservations (in ISO format).
+            end_date (str): The end date of the weekly reservations (in ISO format).
+            start_time (str): The start time of each reservation (in ISO format).
+            end_time (str): The end time of each reservation (in ISO format).
+            api_key (str): The API key for authentication.
+
+        Returns:
+            list: List of JSON responses containing reservation data for each created reservation.
+        """
+        # Convert start_date and end_date strings to datetime objects
+        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+
+        # List to store JSON responses for each created reservation
+        responses = []
+
+        # Loop through each week between start_date and end_date
+        current_date = start_date
+        while current_date <= end_date:
+            # Calculate start and end datetime objects for the current week
+            week_start_datetime = datetime.datetime.combine(current_date, datetime.datetime.strptime(start_time, "%H:%M").time())
+            week_end_datetime = datetime.datetime.combine(current_date, datetime.datetime.strptime(end_time, "%H:%M").time())
+
+            # Create reservation for the current week
+            response = self.create_reservation(room_id, week_start_datetime.isoformat(), week_end_datetime.isoformat(), api_key)
+            responses.append(response)
+
+            # Move to the next week
+            current_date += datetime.timedelta(days=7)
+
+        return responses
