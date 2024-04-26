@@ -1,4 +1,6 @@
 import requests
+from json import JSONDecodeError
+
 
 class ReservationClient:
     def __init__(self, base_url):
@@ -67,3 +69,24 @@ class ReservationClient:
         response = requests.get(url, headers=headers)
         return response.json()
 
+    def register_user(self, username, email):
+        """
+        Register a new user using the API.
+
+        Args:
+            username (str): The username of the new user.
+            email (str): The email address of the new user.
+
+        Returns:
+            str: The API key generated for the new user.
+        """
+        url = f"{self.base_url}/api/user/register/"
+        data = {"username": username, "email": email}
+        try:
+            response = requests.post(url, json=data)
+            if response.status_code == 201:
+                return response.headers.get("api_key")
+            else:
+                return None
+        except JSONDecodeError:
+            return None
