@@ -1,5 +1,6 @@
 # Meetings notes
 
+
 ## Meeting 1.
 * **DATE:** 2024-01-31
 * **ASSISTANTS:** Manex, Amael, Manish and Ivan
