@@ -119,7 +119,7 @@ class UserCollection(Resource):
 
         return Response(headers={"api_key": token}, status=201)
 
-
+@staticmethod
 def is_valid_email(email):
     """
     Check if the given email address is valid.
