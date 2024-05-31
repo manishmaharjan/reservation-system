@@ -1,12 +1,12 @@
 """
-This module contains the implementation of the User resource and related functions.
+This module contains the implementation of the UserCollection resource and related functions.
 
-The User resource is responsible for handling the registration of new users. It provides
+The UserCollection resource is responsible for handling the registration of new users. It provides
 an endpoint for creating a new user by accepting a JSON payload containing the username
-and email. The module also includes a helper function for validating email addresses.
+and email, and another endpoint to get a list of all the users. The module also includes a helper function for validating email addresses.
 
 Classes:
-    RegisterUser: A resource class for registering a new user.
+    UserCollection: A resource class for registering a new user and getting a list of all the users.
 
 Functions:
     is_valid_email: Check if the given email address is valid.
@@ -24,22 +24,36 @@ from src import db
 
 from ..models import ApiKey, User
 
-
-class RegisterUser(Resource):
+class UserCollection(Resource):
     """
-    Resource class for registering a new user.
+    Resource class for registering a new user or getting a list of all the users.
 
     This class handles the POST request for registering a new user. It expects JSON data
     containing the username and email of the user. It validates the data, creates a new
     User instance, generates an API key, and adds the user and API key to the database.
+    It also handles a GET request which gets a list of all the users, and returns it. 
 
     Attributes:
         None
 
     Methods:
+        get(self): Handles the GET request for returning a list with all the users.
         post(self): Handles the POST request for registering a new user.
 
     """
+    def get(self):
+        """
+        Handle GET requests to retrieve a list of all users.
+
+        Returns:
+            Response: The response object with the appropriate status code and headers.
+        """
+        users = User.query.all()
+            
+        users_list = [user.serialize() for user in users]
+
+        return users_list
+
 
     def post(self):
         """

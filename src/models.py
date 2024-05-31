@@ -55,6 +55,18 @@ class User(db.Model):
     api_keys = db.relationship(
         "ApiKey", back_populates="user", cascade="all, delete-orphan"
     )
+    def serialize(self):
+        """
+        Serialize the user object into a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the user object.
+        """
+        doc = {
+            "username": self.username,
+            "email": self.email
+        }
+        return doc
 
 
 class Room(db.Model):
@@ -163,7 +175,7 @@ class ApiKey(db.Model):
         """
         return hashlib.sha256(key.encode()).digest()
 
-    def create_token(self):
+    def create_token():
         """
         Generates a URL-safe token using the secrets module.
 
