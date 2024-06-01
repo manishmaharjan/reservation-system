@@ -46,16 +46,54 @@ class UserId(Resource):
 
         Returns:
             Response: The response object containing user information and the appropriate status code.
+        
+        Retrieve a specific user's information
+        ---
+        tags:
+            - User
+        parameters:
+            - in: path
+              name: userId
+              schema:
+                type: integer
+                required: true
+                description: The unique identifier of the user.
+        responses:
+            200:
+              description: User information retrieved successfully
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      userId:
+                        type: integer
+                        description: The unique identifier of the user
+                      username:
+                        type: string
+                        description: The user's name
+                      email:
+                        type: string
+                        description: The user's email address
+            400:
+              description: Bad Request - The userId parameter is missing or invalid.
+            404:
+              description: Not Found - No user exists with the specified userId.
+
         """
         try:
-            user = User.query.filter_by(id = userId).first()
-            if user is None:
-                return {"message": "User not found"}, 404
+            userId = int(userId)
+            if userId <= 0:
+                return Response("Invalid userId parameter", status = 400)
+        except ValueError:
+            return Response("Invalid userId parameter", status = 400)
 
-            user_data = user.serialize()
-            return user_data, 200
-        except Exception as e:
-            return {"error": str(e)}, 500
+        user = User.query.filter_by(id = userId).first()
+        if user is None:
+            return Response("User not found", status = 404)
+
+        user_data = user.serialize()
+        return user_data, 200
 
     def put(self, userId):
         """
@@ -65,12 +103,54 @@ class UserId(Resource):
             userId (int): The unique identifier of the user.
 
         Returns:
-            Response: The response object indicating the success or failure of the update operation.
+            Response: The response object containing the result of the update operation and the appropriate status code.
+        
+        Update a specific user's information
+        ---
+        tags:
+          - User
+        parameters:
+            - in: path
+              name: userId
+              schema:
+                type: integer
+                required: true
+                description: The unique identifier of the user.
+            - in: body
+              name: body
+              schema:
+                id: User
+                properties:
+                  username:
+                    type: string
+                    description: The user's name
+                  email:
+                    type: string
+                    description: The user's email
+                oneOf:
+                  - required: ['username']
+                  - required: ['email']
+        responses:
+          200:
+            description: User updated successfully.
+          400:
+            description: Bad Request - The userId parameter is missing or invalid, or no username or email provided.
+          404:
+            description: Not Found - No user exists with the specified userId.
+          409:
+            description: Conflict - The email provided is in an incorrect format or the username already exists.
         """
         try:
+            try:
+                userId = int(userId)
+                if userId <= 0:
+                    return Response("Invalid userId parameter", status = 400)
+            except ValueError:
+                return Response("Invalid userId parameter", status = 400)
+
             user = User.query.filter_by(id = userId).first()
             if user is None:
-                return {"message": "User not found"}, 404
+                return Response("User not found", status= 404)
 
             data = request.get_json()
             if 'username' in data:
@@ -82,10 +162,10 @@ class UserId(Resource):
                 user.email = data['email']
             
             if 'username' not in data and 'email' not in data:
-                return {"message": "No username or email provided"}, 400
+                return Response("No username or email provided", status = 400)
             
             db.session.commit()
-            return {"message": "User updated successfully"}, 200
+            return Response("User updated successfully", status = 200)
 
         except IntegrityError:
             db.session.rollback()
@@ -101,14 +181,37 @@ class UserId(Resource):
 
         Returns:
             Response: The response object indicating the success or failure of the delete operation.
+        
+        Delete a specific user.
+        ---
+        tags:
+          - User
+        parameters:
+          - in: path
+            name: userId
+            schema:
+              type: integer
+              required: true
+              description: The unique identifier of the user.
+        responses:  
+          200:
+            description: User deleted successfully.
+          400:
+            description: Bad Request - The userId parameter is missing or invalid.
+          404:
+            description: Not Found - No user exists with the specified userId.
         """
         try:
-            user = User.query.filter_by(id = userId).first()
-            if user is None:
-                return {"message": "User not found"}, 404
+            userId = int(userId)
+            if userId <= 0:
+                return Response("Invalid userId parameter", status = 400)
+        except ValueError:
+            return Response("Invalid userId parameter", status = 400)
 
-            db.session.delete(user)
-            db.session.commit()
-            return {"message": "User deleted successfully"}, 200
-        except Exception as e:
-            return {"error": str(e)}, 500
+        user = User.query.filter_by(id = userId).first()
+        if user is None:
+            return Response("User not found", status= 404)
+
+        db.session.delete(user)
+        db.session.commit()
+        return Response("User deleted successfully", status = 200)

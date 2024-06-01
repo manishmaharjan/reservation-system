@@ -47,12 +47,20 @@ class UserCollection(Resource):
 
         Returns:
             Response: The response object with the appropriate status code and headers.
+        
+        Retrieve a list of all users.
+        ---
+        tags:
+          - User
+        responses:
+          200:
+            description: List of all users retrieved successfully.
         """
         users = User.query.all()
             
         users_list = [user.serialize() for user in users]
 
-        return users_list
+        return users_list, 200
 
 
     def post(self):
@@ -65,7 +73,7 @@ class UserCollection(Resource):
         Create a new user
         ---
         tags:
-          - Users
+          - User
         parameters:
           - in: body
             name: body
@@ -73,28 +81,35 @@ class UserCollection(Resource):
               id: User
               required:
                 - username
-                - password
+                - email
               properties:
                 username:
                   type: string
                   description: The user's name
-                password:
+                email:
                   type: string
-                  description: The user's password
+                  description: The user's email
         responses:
-          200:
-            description: User created
+          201:
+            description: User created successfully
+          400:
+            description: Bad Request - The JSON data provided is malformed or missing required fields (email, username).
+          409:
+            description: Conflict - Conflict - The email provided is not in a valid format or the username already exists.
+          415:
+            description: Unsupported Media Type - The content type of the request is not supported. Ensure you are sending JSON data.
+          
         """
         if not request.is_json:
             raise UnsupportedMediaType("Request must be in JSON format.")
 
         try:
             data = request.get_json(force=True)  # Try to parse JSON data
+            username = data.get("username")
+            email = data.get("email")
         except JSONDecodeError as e:
-            return Response(f"Error parsing JSON data: {e}", status=400)
+            return Response(f"Error parsing JSON data", status=400)
 
-        username = data.get("username")
-        email = data.get("email")
 
         # Check if username or email is missing
         if not username or not email:
