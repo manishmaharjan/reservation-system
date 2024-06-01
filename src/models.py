@@ -63,6 +63,7 @@ class User(db.Model):
             dict: A dictionary representation of the user object.
         """
         doc = {
+            "id": self.id,
             "username": self.username,
             "email": self.email
         }
