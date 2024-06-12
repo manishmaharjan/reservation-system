@@ -31,7 +31,7 @@ def require_admin(func):
         except Exception as exc:
             raise Unauthorized() from exc
         if db_key and db_key.admin:
-            return func(db.key.user, *args, **kwargs)
+            return func(*args, **kwargs)
         raise Unauthorized() from None
 
     return wrapper
@@ -61,7 +61,6 @@ def require_user(func):
         except Exception as exc:
             raise Unauthorized() from exc
         if db_key:
-            kwargs["user"] = db_key.user
             return func(*args, **kwargs)
         raise Unauthorized() from None
 
