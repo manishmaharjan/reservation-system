@@ -31,7 +31,7 @@ def require_admin(func):
         except Exception as exc:
             raise Unauthorized() from exc
         if db_key and db_key.admin:
-            return func(*args, **kwargs)
+            return func(db.key.user, *args, **kwargs)
         raise Unauthorized() from None
 
     return wrapper
@@ -58,9 +58,11 @@ def require_user(func):
         try:
             key_hash = ApiKey.key_hash(request.headers.get("Api-key").strip())
             db_key = ApiKey.query.filter_by(key=key_hash).first()
+            print(key_hash)
         except Exception as exc:
             raise Unauthorized() from exc
         if db_key:
+            kwargs["apiKeyUser"] = db_key.user
             return func(*args, **kwargs)
         raise Unauthorized() from None
 
