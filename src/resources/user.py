@@ -1,5 +1,5 @@
 """
-This module contains the implementation of the User resource..
+This module contains the implementation of the User resource.
 
 The User resource is responsible for handling the modifications, deletions and retrievals of existing users.
 
