@@ -8,7 +8,7 @@ Decorators:
 
 from functools import wraps
 
-from flask import request
+from flask import request, Response
 from werkzeug.exceptions import Unauthorized
 
 from src import db
@@ -19,21 +19,26 @@ from src.models import ApiKey
 def require_admin(func):
     """
     Decorator that checks if the user making the request is an admin.
-    The token will go in a special header named: "Api-key".
-    Raises Unauthorized exception if the user is not an admin or if the token is invalid.
-    """
 
+    Args:
+        func (callable): The function to be decorated.
+
+    Returns:
+        callable: The decorated function.
+
+    Raises:
+        Unauthorized: If the user is an admin or the API key is invalid.
+    """
+    @wraps(func)
     def wrapper(*args, **kwargs):
-        # The token will go in a special header named: "Api-key"
         try:
             key_hash = ApiKey.key_hash(request.headers.get("Api-key").strip())
             db_key = ApiKey.query.filter_by(key=key_hash).first()
         except Exception as exc:
-            raise Unauthorized() from exc
+            return Response("The provided Api-key does not belong to an admin account", status = 401)
         if db_key and db_key.admin:
-            return func(db.key.user, *args, **kwargs)
-        raise Unauthorized() from None
-
+            return func(*args, **kwargs)
+        return Response("The provided Api-key does not belong to an admin account", status = 401)
     return wrapper
 
 
@@ -46,7 +51,7 @@ def require_user(func):
         func (callable): The function to be decorated.
 
     Returns:
-        callable: The decorated function.
+        callable: The decorated function, with the user object as "apiKeyUser".
 
     Raises:
         Unauthorized: If the user is not authenticated or the API key is invalid.
@@ -58,12 +63,12 @@ def require_user(func):
         try:
             key_hash = ApiKey.key_hash(request.headers.get("Api-key").strip())
             db_key = ApiKey.query.filter_by(key=key_hash).first()
-            print(key_hash)
         except Exception as exc:
-            raise Unauthorized() from exc
+            return Response("Incorrect api key.", status = 401)
         if db_key:
             kwargs["apiKeyUser"] = db_key.user
             return func(*args, **kwargs)
-        raise Unauthorized() from None
+        return Response("Incorrect api key.", status = 401)
+
 
     return wrapper
