@@ -180,6 +180,8 @@ class ReservationCollection(Resource):
             description: Invalid userId parameter, or missing/invalid reservation details.
           401:
             description: The provided API key does not correspond to the userId provided.
+          404:
+            description: No room found with the roomId provided.
           409:
             description: Reservation conflict (e.g., past time slot, overlapping reservation, reservation too long).
           415:
@@ -215,7 +217,7 @@ class ReservationCollection(Resource):
         # Check that the room id corresponds to a room
         room = Room.query.filter_by(id = room_id).first()
         if not room:
-            return Response("No room found with the provided room id.", status = 400)
+            return Response("No room found with the provided room id.", status = 404)
         
         # Convert reservation_date, start_time, and end_time to datetime Python objects
         try:
