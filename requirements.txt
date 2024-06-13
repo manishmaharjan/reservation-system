@@ -1,7 +1,7 @@
 Flask
 Flask-SQLAlchemy
 SQLAlchemy
-pytest
-flask_sqlalchemy
-flasgger
+pysqlite3
 flask_restful
+pytest
+flasgger

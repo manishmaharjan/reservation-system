@@ -1,15 +1,11 @@
 """
-This module contains the implementation of the User resource and related functions.
+This module contains the implementation of the User resource.
 
-The User resource is responsible for handling the registration of new users. It provides
-an endpoint for creating a new user by accepting a JSON payload containing the username
-and email. The module also includes a helper function for validating email addresses.
+The User resource is responsible for handling the modifications, deletions and retrievals of existing users.
 
 Classes:
-    RegisterUser: A resource class for registering a new user.
+    UserId: A resource class for seeing, modifying and deleting existing users.
 
-Functions:
-    is_valid_email: Check if the given email address is valid.
 """
 
 import re
@@ -21,103 +17,201 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import UnsupportedMediaType
 
 from src import db
+from src.resources.userCollection import is_valid_email
 
 from ..models import ApiKey, User
 
-
-class RegisterUser(Resource):
+class UserId(Resource):
     """
-    Resource class for registering a new user.
+    Resource class for seeing, modifying and deleting existing users. Implementing
+    the User resource.
 
-    This class handles the POST request for registering a new user. It expects JSON data
-    containing the username and email of the user. It validates the data, creates a new
-    User instance, generates an API key, and adds the user and API key to the database.
+    This class handles the GET, PUT and DELETE requests for seeing, modifying and deleting existing users. 
+    
 
     Attributes:
         None
 
     Methods:
-        post(self): Handles the POST request for registering a new user.
-
+        get(userId): Handle GET requests to retrieve information about a specific user.
+        put(userId): Handle PUT requests to update information about a specific user.
+        delete(userId): Handle DELETE requests to remove a specific user.
     """
-
-    def post(self):
+    def get(self, userId):
         """
-        Handle POST requests to create a new user.
+        Handle GET requests to retrieve information about a specific user.
+
+        Args:
+            userId (int): The unique identifier of the user.
 
         Returns:
-            Response: The response object with the appropriate status code and headers.
-
-        Create a new user
+            Response: The response object containing user information and the appropriate status code.
+        
+        Retrieve a specific user's information
         ---
         tags:
-          - Users
+            - User
         parameters:
-          - in: body
-            name: body
-            schema:
-              id: User
-              required:
-                - username
-                - password
-              properties:
-                username:
-                  type: string
-                  description: The user's name
-                password:
-                  type: string
-                  description: The user's password
+            - in: path
+              name: userId
+              schema:
+                type: integer
+                required: true
+                description: The unique identifier of the user.
+        responses:
+            200:
+              description: User information retrieved successfully
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      userId:
+                        type: integer
+                        description: The unique identifier of the user
+                      username:
+                        type: string
+                        description: The user's name
+                      email:
+                        type: string
+                        description: The user's email address
+            400:
+              description: Bad Request - The userId parameter is missing or invalid.
+            404:
+              description: Not Found - No user exists with the specified userId.
+
+        """
+        try:
+            userId = int(userId)
+            if userId <= 0:
+                return Response("Invalid userId parameter", status = 400)
+        except ValueError:
+            return Response("Invalid userId parameter", status = 400)
+
+        user = User.query.filter_by(id = userId).first()
+        if user is None:
+            return Response("User not found", status = 404)
+
+        user_data = user.serialize()
+        return user_data, 200
+
+    def put(self, userId):
+        """
+        Handle PUT requests to update information about a specific user.
+
+        Args:
+            userId (int): The unique identifier of the user.
+
+        Returns:
+            Response: The response object containing the result of the update operation and the appropriate status code.
+        
+        Update a specific user's information
+        ---
+        tags:
+          - User
+        parameters:
+            - in: path
+              name: userId
+              schema:
+                type: integer
+                required: true
+                description: The unique identifier of the user.
+            - in: body
+              name: body
+              schema:
+                id: User
+                properties:
+                  username:
+                    type: string
+                    description: The user's name
+                  email:
+                    type: string
+                    description: The user's email
+                oneOf:
+                  - required: ['username']
+                  - required: ['email']
         responses:
           200:
-            description: User created
+            description: User updated successfully.
+          400:
+            description: Bad Request - The userId parameter is missing or invalid, or no username or email provided.
+          404:
+            description: Not Found - No user exists with the specified userId.
+          409:
+            description: Conflict - The email provided is in an incorrect format or the username already exists.
         """
-        if not request.is_json:
-            raise UnsupportedMediaType("Request must be in JSON format.")
-
         try:
-            data = request.get_json(force=True)  # Try to parse JSON data
-        except JSONDecodeError as e:
-            return Response(f"Error parsing JSON data: {e}", status=400)
+            try:
+                userId = int(userId)
+                if userId <= 0:
+                    return Response("Invalid userId parameter", status = 400)
+            except ValueError:
+                return Response("Invalid userId parameter", status = 400)
 
-        username = data.get("username")
-        email = data.get("email")
+            user = User.query.filter_by(id = userId).first()
+            if user is None:
+                return Response("User not found", status= 404)
 
-        # Check if username or email is missing
-        if not username or not email:
-            return Response("Username and email are required", status=400)
-
-        # Check email format
-        if not is_valid_email(email):
-            return Response("Incorrect email format", status=409)
-
-        user = User(username=username, email=email)
-        token = ApiKey.create_token()
-        api_key = ApiKey(key=ApiKey.key_hash(token), user=user)
-
-        # Add instances to the database
-        try:
-            db.session.add(user)
-            db.session.add(api_key)
+            data = request.get_json()
+            if 'username' in data:
+                user.username = data['username']
+            
+            if 'email' in data:
+                if not is_valid_email(data['email']):
+                    return Response("Incorrect email format", status=409)
+                user.email = data['email']
+            
+            if 'username' not in data and 'email' not in data:
+                return Response("No username or email provided", status = 400)
+            
             db.session.commit()
+            return Response("User updated successfully", status = 200)
+
         except IntegrityError:
             db.session.rollback()
             return Response("Username already exists", status=409)
+    
 
-        return Response(headers={"api_key": token}, status=201)
+    def delete(self, userId):
+        """
+        Handle DELETE requests to remove a specific user.
 
+        Args:
+            userId (int): The unique identifier of the user.
 
-def is_valid_email(email):
-    """
-    Check if the given email address is valid.
+        Returns:
+            Response: The response object indicating the success or failure of the delete operation.
+        
+        Delete a specific user.
+        ---
+        tags:
+          - User
+        parameters:
+          - in: path
+            name: userId
+            schema:
+              type: integer
+              required: true
+              description: The unique identifier of the user.
+        responses:  
+          200:
+            description: User deleted successfully.
+          400:
+            description: Bad Request - The userId parameter is missing or invalid.
+          404:
+            description: Not Found - No user exists with the specified userId.
+        """
+        try:
+            userId = int(userId)
+            if userId <= 0:
+                return Response("Invalid userId parameter", status = 400)
+        except ValueError:
+            return Response("Invalid userId parameter", status = 400)
 
-    Args:
-        email (str): The email address to be validated.
+        user = User.query.filter_by(id = userId).first()
+        if user is None:
+            return Response("User not found", status= 404)
 
-    Returns:
-        bool: True if the email is valid, False otherwise.
-    """
-    # Regular expression for validating email addresses
-    email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-
-    # Check if the email matches the regular expression pattern
-    return re.match(email_regex, email) is not None
+        db.session.delete(user)
+        db.session.commit()
+        return Response("User deleted successfully", status = 200)

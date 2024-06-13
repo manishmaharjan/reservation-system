@@ -55,6 +55,19 @@ class User(db.Model):
     api_keys = db.relationship(
         "ApiKey", back_populates="user", cascade="all, delete-orphan"
     )
+    def serialize(self):
+        """
+        Serialize the user object into a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the user object.
+        """
+        doc = {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email
+        }
+        return doc
 
 
 class Room(db.Model):
@@ -77,6 +90,21 @@ class Room(db.Model):
     reservations = db.relationship(
         "Reservation", back_populates="room", cascade="all, delete-orphan"
     )
+
+    def serialize(self):
+        """
+        Serialize the room object into a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the room object.
+        """
+        doc = {
+            "id": self.id,
+            "room_name": self.room_name,
+            "capacity": self.capacity,
+            "max_time": self.max_time
+        }
+        return doc
 
 
 class Reservation(db.Model):
@@ -163,7 +191,7 @@ class ApiKey(db.Model):
         """
         return hashlib.sha256(key.encode()).digest()
 
-    def create_token(self):
+    def create_token():
         """
         Generates a URL-safe token using the secrets module.
 
