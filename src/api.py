@@ -8,7 +8,7 @@ from flask_restful import Api
 from src import create_app
 
 from .converters import RoomConverter
-from .resources import reservation, reservationCollection,  userCollection, user
+from .resources import reservation, reservationCollection,  userCollection, user, rooms_available
 
 app = create_app()
 
@@ -24,6 +24,7 @@ api.add_resource(user.UserId, "/api/users/<userId>/")
 api.add_resource(reservationCollection.ReservationCollection, "/api/users/<userId>/reservations/")
 api.add_resource(reservation.ReservationId, "/api/users/<userId>/reservations/<reservationId>/")
 
+api.add_resource(rooms_available.RoomsAvailable, "/api/rooms_available/")
 
 if __name__ == "__main__":
     app.run(debug=True)
