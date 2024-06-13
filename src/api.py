@@ -18,11 +18,11 @@ api = Api(app)
 
 app.url_map.converters["room"] = RoomConverter
 
-api.add_resource(userCollection.UserCollection, "/api/user/")
-api.add_resource(user.UserId, "/api/user/<userId>/")
+api.add_resource(userCollection.UserCollection, "/api/users/")
+api.add_resource(user.UserId, "/api/users/<userId>/")
 
-api.add_resource(reservationCollection.ReservationCollection, "/api/user/<userId>/reservations/")
-api.add_resource(reservation.ReservationId, "/api/user/<userId>/reservations/<reservationId>/")
+api.add_resource(reservationCollection.ReservationCollection, "/api/users/<userId>/reservations/")
+api.add_resource(reservation.ReservationId, "/api/users/<userId>/reservations/<reservationId>/")
 
 
 if __name__ == "__main__":
