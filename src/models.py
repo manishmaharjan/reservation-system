@@ -91,6 +91,21 @@ class Room(db.Model):
         "Reservation", back_populates="room", cascade="all, delete-orphan"
     )
 
+    def serialize(self):
+        """
+        Serialize the room object into a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the room object.
+        """
+        doc = {
+            "id": self.id,
+            "room_name": self.room_name,
+            "capacity": self.capacity,
+            "max_time": self.max_time
+        }
+        return doc
+
 
 class Reservation(db.Model):
     """
