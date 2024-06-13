@@ -23,6 +23,7 @@ from werkzeug.exceptions import UnsupportedMediaType
 from src import db
 
 from ..models import ApiKey, User
+from ..decorators import require_admin, require_user
 
 class UserCollection(Resource):
     """
@@ -41,6 +42,7 @@ class UserCollection(Resource):
         post(self): Handles the POST request for registering a new user.
 
     """
+    @require_admin
     def get(self):
         """
         Handle GET requests to retrieve a list of all users.
@@ -48,10 +50,16 @@ class UserCollection(Resource):
         Returns:
             Response: The response object with the appropriate status code and headers.
         
-        Retrieve a list of all users.
+        Retrieve a list of all users. Requires an admin API key in the 'Api-key' header.
         ---
         tags:
           - User
+        parameters:
+          - in: header
+            name: Api-key
+            type: string
+            required: true
+            description: Api-key corresponding to an admin account.
         responses:
           200:
             description: List of all users retrieved successfully.
@@ -61,7 +69,6 @@ class UserCollection(Resource):
         users_list = [user.serialize() for user in users]
 
         return users_list, 200
-
 
     def post(self):
         """
