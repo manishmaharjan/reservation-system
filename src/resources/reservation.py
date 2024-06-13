@@ -1,249 +1,414 @@
 """
-This module contains the resource classes for managing reservations in the reservation system.
+This module contains the implementation of the Reservation resource.
 
-It includes the following classes:
+The Reservation resource is responsible for handling the modifications, deletions and retrievals of existing reservations.
 
-- GetReservations:
-A resource class for retrieving reservations for a user within a specified date range.
-
-- CreateReservation:
-A resource class for creating a new reservation for a user in a specified room.
-
-- DeleteReservation:
-A resource class for deleting a reservation for a user in a specified room.
+Classes:
+    ReservationId: A resource class for seeing, modifying and deleting existing reservations.
 """
-
-from datetime import date, datetime, timedelta
-from json import JSONDecodeError
 
 from flask import Response, request
 from flask_restful import Resource
-from werkzeug.exceptions import UnsupportedMediaType
+from json import JSONDecodeError
+from datetime import date, datetime, timedelta
 
 from src import db
-
 from ..decorators import require_user
-from ..models import Reservation
+from ..models import Reservation, Room
 
-
-class GetReservations(Resource):
+class ReservationId(Resource):
     """
-    Represents a resource for retrieving reservations.
+    Resource class for seeing, modifying and deleting existing reservations. Implementing
+    the Reservation resource.
 
-    This class provides a GET method that retrieves reservations
-     based on the specified start and end dates.
-    """
+    This class handles the GET, PUT and DELETE requests for seeing, modifying and deleting existing reservations. 
+    
 
-    @require_user
-    def get(self, user):
-        """
-        Retrieves all reservations for a given user.
-        ---
-        tags:
-          - Reservations
-        parameters:
-          - in: header
-            name: API-KEY
-            type: string
-            required: true
-            description: The user for whom to retrieve reservations using API key for authentication.
-        responses:
-          200:
-            description: A list of all reservations for the specified user.
-        """
-        start_date = request.args.get("start_date")
-        end_date = request.args.get("end_date")
-        start_date = (
-            datetime.strptime(start_date, "%Y-%m-%d").date()
-            if start_date
-            else date.today()
-        )
-        end_date = (
-            datetime.strptime(end_date, "%Y-%m-%d").date()
-            if end_date
-            else date.today() + timedelta(days=365)
-        )
-        return [
-            reservation.serialize()
-            for reservation in user.reservations
-            if start_date <= reservation.start_time.date() <= end_date
-        ]
-
-
-class CreateReservation(Resource):
-    """
-    Represents a resource for creating a reservation.
+    Attributes:
+        None
 
     Methods:
-    - post: Handles the HTTP POST request for creating a reservation.
+        get(userId, reservationId): Handle GET requests to retrieve information about a specific reservation.
+        put(userId, reservationId): Handle PUT requests to update information about a specific reservation.
+        delete(userId, reservationId): Handle DELETE requests to remove a specific reservation.
     """
-
     @require_user
-    def post(self, user, room):
+    def get(self,apiKeyUser, userId, reservationId):
         """
-        Create a new reservation for a given user and room.
-        ---
-        tags:
-          - Reservations
-        parameters:
-          - in: header
-            name: API-KEY
-            type: string
-            required: true
-            description: The user for whom to retrieve reservations using API key for authentication.
-          - in: path
-            name: room
-            type: string
-            required: true
-            description: The room for the reservation.
-          - in: body
-            name: body
-            schema:
-              id: Reservation
-              required:
-                - date
-                - start_time
-                - end_time
-              properties:
-                date:
-                  type: string
-                  format: date
-                  description: The date for the reservation.
-                start_time:
-                  type: string
-                  format: time
-                  description: The start time for the reservation.
-                end_time:
-                  type: string
-                  format: time
-                  description: The end time for the reservation.
-        responses:
-          200:
-            description: Reservation created
+        Retrieve a specific reservation for a given user.
+
+        This method handles GET requests to retrieve a reservation for a specific user.
+        The request must include a valid API key in the header, and the API key must correspond to the userId provided.
+
+        Args:
+            apiKeyUser (User): The user associated with the provided API key.
+            userId (int): The unique identifier of the user.
+            reservationId (int): The unique identifier of the reservation.
+
+        Returns:
+            Response: The reservation details if the reservation belongs to the user, or an error message with the appropriate status code.
+
+            ---
+            tags:
+              - Reservations
+            parameters:
+              - in: header
+                name: Api-key
+                type: string
+                required: true
+                description: The user for whom to retrieve the reservation using API key for authentication.
+              - in: path
+                name: userId
+                type: integer
+                required: true
+                description: The unique identifier of the user.
+              - in: path
+                name: reservationId
+                type: integer
+                required: true
+                description: The unique identifier of the reservation.
+            responses:
+              200:
+                description: The reservation details.
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        user:
+                          type: string
+                          description: The username of the user.
+                        room:
+                          type: string
+                          description: The name of the reserved room.
+                        date:
+                          type: string
+                          format: date
+                          description: The date of the reservation.
+                        time-span:
+                          type: string
+                          description: The time span of the reservation.
+                      example:
+                        user: "john_doe"
+                        room: "Conference Room 1"
+                        date: "2023-05-28"
+                        time-span: "10:00 - 11:00"
+              400:
+                description: Invalid userId parameter.
+              401:
+                description: The provided API key does not correspond to the userId provided.
+              403:
+                description: Reservation does not belong to the provided userId.
+              404:
+                description: No reservation found with the provided reservationId.
         """
-        # Code for creating a reservation
+        try:
+            userId = int(userId)
+            if userId <= 0:
+                return Response("Invalid userId parameter", status = 400)
+        except ValueError:
+            return Response("Invalid userId parameter", status = 400)      
+
+        # Check that the api-key corresponds to the user.
+        if apiKeyUser.id != userId:
+            return Response("The provided Api-key does not correspond to the userId provided.", status = 401)
+        
+        # Check that the reservation exists
+        reservation = Reservation.query.filter_by(id = reservationId).first()
+        if not reservation:
+            return Response("No reservation found with the provided reservationId.", status = 404)
+        if reservation.user_id != userId:
+            return Response("Reservation does not belong to the provided userId.", status = 403)
+        reservation_data = reservation.serialize()
+        return reservation_data, 200
+    @require_user
+    def delete(self, apiKeyUser, userId, reservationId):
+        """
+        Delete a specific reservation for a given user.
+
+        This method handles DELETE requests to remove a reservation for a specific user.
+        The request must include a valid API key in the header, and the API key must correspond to the userId provided.
+
+        Args:
+            apiKeyUser (User): The user associated with the provided API key.
+            userId (int): The unique identifier of the user.
+            reservationId (int): The unique identifier of the reservation.
+
+        Returns:
+            Response: A success message if the reservation is deleted, or an error message with the appropriate status code.
+
+            ---
+            tags:
+            - Reservations
+            parameters:
+            - in: header
+              name: Api-key
+              type: string
+              required: true
+              description: The user for whom to delete the reservation using API key for authentication.
+            - in: path
+              name: userId
+              type: integer
+              required: true
+              description: The unique identifier of the user.
+            - in: path
+              name: reservationId
+              type: integer
+              required: true
+              description: The unique identifier of the reservation.
+            responses:
+              200:
+                description: Reservation deleted successfully.
+                content:
+                application/json:
+                    schema:
+                    type: object
+                    properties:
+                        message:
+                        type: string
+                        example: "Reservation deleted successfully"
+              400:
+                description: Invalid userId parameter.
+              401:
+                description: The provided API key does not correspond to the userId provided.
+              403:
+                description: Reservation does not belong to the provided userId.
+              404:
+                description: No reservation found with the provided reservationId.
+        """
+        try:
+            userId = int(userId)
+            if userId <= 0:
+                return Response("Invalid userId parameter", status=400)
+        except ValueError:
+            return Response("Invalid userId parameter", status=400)
+
+        # Check that the api-key corresponds to the user.
+        if (apiKeyUser.id != userId):
+            return Response("The provided Api-key does not correspond to the userId provided.", status=401)
+
+        # Check that the reservation exists
+        reservation = Reservation.query.filter_by(id=reservationId).first()
+        if not reservation:
+            return Response("No reservation found with the provided reservationId.", status=404)
+        if reservation.user_id != userId:
+            return Response("Reservation does not belong to the provided userId.", status=403)
+
+        # Delete the reservation
+        db.session.delete(reservation)
+        db.session.commit()
+        return Response("Reservation deleted successfully", status=200)
+    
+    @require_user
+    def put(self, apiKeyUser, userId, reservationId):
+        """
+        Update a specific reservation for a given user.
+
+        This method handles PUT requests to update a reservation for a specific user.
+        The request must include a valid API key in the header, and the API key must correspond to the userId provided.
+        The request body should be in JSON format and may include the new date, start-time, end-time, and room_id.
+
+        Args:
+            apiKeyUser (User): The user associated with the provided API key.
+            userId (int): The unique identifier of the user.
+            reservationId (int): The unique identifier of the reservation.
+
+        Returns:
+            Response: A success message if the reservation is updated, or an error message with the appropriate status code.
+
+            ---
+            tags:
+            - Reservations
+            parameters:
+            - in: header
+              name: Api-key
+              type: string
+              required: true
+              description: The user for whom to update the reservation using API key for authentication.
+            - in: path
+              name: userId
+              type: integer
+              required: true
+              description: The unique identifier of the user.
+            - in: path
+              name: reservationId
+              type: integer
+              required: true
+              description: The unique identifier of the reservation.
+            - in: body
+              name: body
+              required: true
+              description: The new details of the reservation.
+              schema:
+                id: Reservation
+                type: object
+                properties:
+                    date:
+                      type: string
+                      format: date
+                      description: The new date of the reservation.
+                    start-time:
+                      type: string
+                      format: time
+                      description: The new start time of the reservation.
+                    end-time:
+                      type: string
+                      format: time
+                      description: The new end time of the reservation.
+                    roomId:
+                      type: integer
+                      description: The new room id for the reservation.
+                example:
+                    date: "2024-06-01"
+                    start-time: "14:00"
+                    end-time: "16:00"
+                    room-id: 2
+            responses:
+              200:
+                description: Reservation updated successfully.
+              400:
+                description: Invalid userId parameter or invalid input data.
+              401:
+                description: The provided API key does not correspond to the userId provided.
+              403:
+                description: Reservation does not belong to the provided userId.
+              404:
+                description: No reservation found with the provided reservationId or no room found with the provided room id.
+              409:
+                description: The new time slot is already taken or the reservation duration exceeds the room's max time.
+        """
+        try:
+            userId = int(userId)
+            if userId <= 0:
+                return Response("Invalid userId parameter", status=400)
+        except ValueError:
+            return Response("Invalid userId parameter", status=400)
+
+        # Check that the api-key corresponds to the user.
+        if apiKeyUser.id != userId:
+            return Response("The provided Api-key does not correspond to the userId provided.", status=401)
+
+        # Check that the reservation exists
+        reservation = Reservation.query.filter_by(id=reservationId).first()
+        if not reservation:
+            return Response("No reservation found with the provided reservationId.", status=404)
+        if reservation.user_id != userId:
+            return Response("Reservation does not belong to the provided userId.", status=403)
+
+        # Ensure correct json
         if not request.is_json:
-            raise UnsupportedMediaType()
+            return Response("Request must be in JSON format.", status=415)
         try:
             data = request.get_json(force=True)  # Try to parse JSON data
+            reservation_date = data.get("date")
+            start_time = data.get("start-time")
+            end_time = data.get("end-time")
+            room_id = data.get("roomId")
         except JSONDecodeError as e:
-            return Response(f"Error parsing JSON data: {e}", status=400)
+            return Response(f"Error parsing JSON data", status=400)
 
-        reservation_date = data.get("date")
-        start_time = data.get("start_time")
-        end_time = data.get("end_time")
+        if not reservation_date and not start_time and not end_time and not room_id:
+            return Response("At least one of date, start-time, end-time, or roomId is required.", status=400)
 
-        if not reservation_date or not start_time or not end_time:
-            return Response("Date, start_time and end_time are required", status=400)
+        if room_id:
+            room = Room.query.filter_by(id=room_id).first()
+            if not room:
+                return Response("No room found with the provided room id.", status=404)
+        else:
+            room = reservation.room
+
+        # Update reservation details
         try:
-            # Convert reservation_date, start_time, and end_time to datetime Python objects
-            reservation_date = datetime.strptime(reservation_date, "%Y-%m-%d").date()
-            start_time = datetime.combine(
-                reservation_date, datetime.strptime(start_time, "%H:%M").time()
-            )
-            end_time = datetime.combine(
-                reservation_date, datetime.strptime(end_time, "%H:%M").time()
-            )
-            if (
-                end_time.time() <= start_time.time()
-            ):  # In case the reservation is on midnight
-                end_time += timedelta(days=1)
-                print("Terves")
+            userId = int(userId)
+            if userId <= 0:
+                return Response("Invalid userId parameter", status=400)
         except ValueError:
-            return Response(
-                "Invalid date or time format. Date format: YYYY-MM-DD. Time format: HH:MM",
-                status=400,
-            )
+            return Response("Invalid userId parameter", status=400)
 
-        if start_time < datetime.now():
-            return Response("Can not book past time slots", status=409)
+        # Check that the api-key corresponds to the user.
+        if (apiKeyUser.id != userId):
+            return Response("The provided Api-key does not correspond to the userId provided.", status=401)
+
+        # Check that the reservation exists
+        reservation = Reservation.query.filter_by(id=reservationId).first()
+        if not reservation:
+            return Response("No reservation found with the provided reservationId.", status=404)
+        if reservation.user_id != userId:
+            return Response("Reservation does not belong to the provided userId.", status=403)
+
+        # Ensure correct json
+        if not request.is_json:
+            return Response("Request must be in JSON format.", status=415)
+        try:
+            data = request.get_json(force=True)  # Try to parse JSON data
+            reservation_date = data.get("date")
+            start_time = data.get("start-time")
+            end_time = data.get("end-time")
+            room_id = data.get("roomId")
+        except JSONDecodeError as e:
+            return Response(f"Error parsing JSON data", status=400)
+
+        if not reservation_date and not start_time and not end_time and not room_id:
+            return Response("At least one of date, start-time, end-time, or roomId is required.", status=400)
+
+        if room_id:
+            room = Room.query.filter_by(id=room_id).first()
+            if not room:
+                return Response("No room found with the provided roomId.", status=404)
+        else:
+            room = reservation.room
+
+        # Update reservation details
+        try:
+            if reservation_date:
+                reservation_date = datetime.strptime(reservation_date, "%Y-%m-%d").date()
+            else:
+                reservation_date = reservation.start_time.date()
+
+            if start_time:
+                start_time = datetime.combine(reservation_date, datetime.strptime(start_time, "%H:%M").time())
+            else:
+                start_time = datetime.combine(reservation_date, reservation.start_time.time())
+
+            if end_time:
+                end_time = datetime.combine(reservation_date, datetime.strptime(end_time, "%H:%M").time())
+                if end_time.time() <= start_time.time():
+                    end_time += timedelta(days=1)
+            else:
+                end_time = datetime.combine(reservation_date, reservation.end_time.time())
+        except ValueError:
+            return Response("Invalid date or time format. Date format: YYYY-MM-DD. Time format: HH:MM", status=400)
 
         total_minutes = (end_time - start_time).total_seconds() // 60
-
         if total_minutes > room.max_time:
             return Response("Reservation is too long.", status=409)
 
-        overlaping_reservations = Reservation.query.filter(
+        overlapping_reservations = Reservation.query.filter(
             (Reservation.room == room)
             & (
                 (
                     (Reservation.start_time >= start_time)
                     & (Reservation.start_time <= end_time)
                 )
-                | (  # If a reservation starts in the timespan
+                | (
                     (Reservation.end_time >= start_time)
                     & (Reservation.end_time <= end_time)
                 )
-                | (  # If a reservation ends in the timespan
+                | (
                     (Reservation.start_time <= start_time)
                     & (Reservation.end_time >= end_time)
-                )  # If the whole timespan is already booked
+                )
             )
+            & (Reservation.id != reservation.id)
         ).all()
 
-        if overlaping_reservations:
+        if overlapping_reservations:
             return Response("Time slot already taken", status=409)
-        # Create and insert the object
-        reservation = Reservation(
-            room=room, user=user, start_time=start_time, end_time=end_time
-        )
-        db.session.add(reservation)
+
+        reservation.start_time = start_time
+        reservation.end_time = end_time
+        reservation.room = room
+
         db.session.commit()
 
-        return Response("Reservation created successfully", status=209)
-
-
-class DeleteReservation(Resource):
-    """
-    Represents a resource for deleting a reservation.
-
-    This resource allows authenticated users to delete their own reservations for a specific room.
-
-    Args:
-        user (User): The authenticated user making the request.
-        room (Room): The room for which the reservation is being deleted.
-        reservation_id (int): The ID of the reservation to be deleted.
-
-    Returns:
-        Response: A response indicating the status of the deletion operation.
-
-    Raises:
-        None
-
-    """
-
-    @require_user
-    def delete(self, user, room, reservation_id):
-        """
-        Delete a reservation for a given user, room, and reservation ID.
-        ---
-        tags:
-          - Reservations
-        parameters:
-          - in: header
-            name: API-KEY
-            type: string
-            required: true
-            description: The user for whom to retrieve reservations using API key for authentication.
-          - in: path
-            name: room
-            type: string
-            required: true
-            description: The room for the reservation.
-          - in: path
-            name: reservation_id
-            type: integer
-            required: true
-            description: The ID of the reservation.
-        responses:
-          200:
-            description: Reservation deleted
-        """
-        reservation = Reservation.query.filter_by(
-            id=reservation_id, user=user, room=room
-        ).first()
-        if reservation:
-            db.session.delete(reservation)
-            db.session.commit()
-            return Response("Reservation deleted successfully", status=204)
-        return Response("Reservation not found", status=404)
+        return Response("Reservation updated successfully", status=200)

@@ -22,9 +22,8 @@ api.add_resource(userCollection.UserCollection, "/api/user/")
 api.add_resource(user.UserId, "/api/user/<userId>/")
 
 api.add_resource(reservationCollection.ReservationCollection, "/api/user/<userId>/reservations/")
+api.add_resource(reservation.ReservationId, "/api/user/<userId>/reservations/<reservationId>/")
 
-api.add_resource(reservation.CreateReservation, "/api/reservations/<room:room>/")
-api.add_resource(reservation.DeleteReservation, "/api/reservations/<room:room>/<int:reservation_id>/")
 
 if __name__ == "__main__":
     app.run(debug=True)
