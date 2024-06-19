@@ -99,6 +99,11 @@ class UserCollection(Resource):
         responses:
           201:
             description: User created successfully
+            headers:
+              api-key:
+                description: The API key for the newly created user.
+                schema:
+                  type: string
           400:
             description: Bad Request - The JSON data provided is malformed or missing required fields (email, username).
           409:
