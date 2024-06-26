@@ -4,3 +4,5 @@ instance/reservation_system.db
 ./instance/*
 .trunk
 .ruff_cache
+.idea
+venv
