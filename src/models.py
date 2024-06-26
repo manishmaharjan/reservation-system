@@ -144,6 +144,7 @@ class Reservation(db.Model):
             dict: A dictionary representation of the reservation object.
         """
         doc = {
+            "id": self.id,
             "user": self.user.username,
             "room": self.room.room_name,
             "date": self.start_time.date().isoformat(),
