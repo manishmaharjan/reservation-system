@@ -104,6 +104,10 @@ class UserCollection(Resource):
                 description: The API key for the newly created user.
                 schema:
                   type: string
+              user_id:
+                description: The id of the newly created user.
+                schema:
+                  type: integer
           400:
             description: Bad Request - The JSON data provided is malformed or missing required fields (email, username).
           409:
@@ -144,7 +148,7 @@ class UserCollection(Resource):
             db.session.rollback()
             return Response("Username already exists", status=409)
 
-        return Response(headers={"api_key": token}, status=201)
+        return Response(headers={"api_key": token, "user_id": user.id}, status=201)
 
 @staticmethod
 def is_valid_email(email):
