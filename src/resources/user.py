@@ -18,7 +18,7 @@ from werkzeug.exceptions import UnsupportedMediaType
 
 from src import db
 from src.resources.userCollection import is_valid_email
-
+from ..decorators import require_user
 from ..models import ApiKey, User
 
 class UserId(Resource):
@@ -37,7 +37,8 @@ class UserId(Resource):
         put(userId): Handle PUT requests to update information about a specific user.
         delete(userId): Handle DELETE requests to remove a specific user.
     """
-    def get(self, userId):
+    @require_user
+    def get(self, apiKeyUser, userId):
         """
         Handle GET requests to retrieve information about a specific user.
 
@@ -77,6 +78,8 @@ class UserId(Resource):
                         description: The user's email address
             400:
               description: Bad Request - The userId parameter is missing or invalid.
+            401:
+              description: Unauthorized - The provided api-key does not belong to the userId provided.
             404:
               description: Not Found - No user exists with the specified userId.
 
@@ -91,11 +94,14 @@ class UserId(Resource):
         user = User.query.filter_by(id = userId).first()
         if user is None:
             return Response("User not found", status = 404)
+        # Check that the api-key corresponds to the user.
+        if apiKeyUser.id != userId:
+            return Response("The provided Api-key does not correspond to the userId provided.", status = 401)
 
         user_data = user.serialize()
         return user_data, 200
-
-    def put(self, userId):
+    @require_user
+    def put(self, apiKeyUser, userId):
         """
         Handle PUT requests to update information about a specific user.
 
@@ -135,6 +141,8 @@ class UserId(Resource):
             description: User updated successfully.
           400:
             description: Bad Request - The userId parameter is missing or invalid, or no username or email provided.
+          401:
+            description: Unauthorized - The provided api-key does not belong to the userId provided.
           404:
             description: Not Found - No user exists with the specified userId.
           409:
@@ -151,7 +159,9 @@ class UserId(Resource):
             user = User.query.filter_by(id = userId).first()
             if user is None:
                 return Response("User not found", status= 404)
-
+            # Check that the api-key corresponds to the user.
+            if apiKeyUser.id != userId:
+              return Response("The provided Api-key does not correspond to the userId provided.", status = 401)
             data = request.get_json()
             if 'username' in data:
                 user.username = data['username']
@@ -171,8 +181,8 @@ class UserId(Resource):
             db.session.rollback()
             return Response("Username already exists", status=409)
     
-
-    def delete(self, userId):
+    @require_user
+    def delete(self,apiKeyUser, userId):
         """
         Handle DELETE requests to remove a specific user.
 
@@ -198,6 +208,8 @@ class UserId(Resource):
             description: User deleted successfully.
           400:
             description: Bad Request - The userId parameter is missing or invalid.
+          401:
+            description: Unauthorized - The provided api-key does not belong to the userId provided.
           404:
             description: Not Found - No user exists with the specified userId.
         """
@@ -211,6 +223,10 @@ class UserId(Resource):
         user = User.query.filter_by(id = userId).first()
         if user is None:
             return Response("User not found", status= 404)
+        
+        # Check that the api-key corresponds to the user.
+        if apiKeyUser.id != userId:
+          return Response("The provided Api-key does not correspond to the userId provided.", status = 401)
 
         db.session.delete(user)
         db.session.commit()
