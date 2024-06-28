@@ -112,6 +112,12 @@ class ReservationId(Resource):
         # Check that the api-key corresponds to the user.
         if apiKeyUser.id != userId:
             return Response("The provided Api-key does not correspond to the userId provided.", status = 401)
+        try:
+            reservationId = int(reservationId)
+            if reservationId <= 0:
+                return Response("Invalid reservationId parameter", status=400)
+        except ValueError:
+            return Response("Invalid reservationId parameter", status=400)
         
         # Check that the reservation exists
         reservation = Reservation.query.filter_by(id = reservationId).first()
@@ -186,6 +192,14 @@ class ReservationId(Resource):
         # Check that the api-key corresponds to the user.
         if (apiKeyUser.id != userId):
             return Response("The provided Api-key does not correspond to the userId provided.", status=401)
+        
+        # Check correct reservationId
+        try:
+            reservationId = int(reservationId)
+            if reservationId <= 0:
+                return Response("Invalid reservationId parameter", status=400)
+        except ValueError:
+            return Response("Invalid reservationId parameter", status=400)
 
         # Check that the reservation exists
         reservation = Reservation.query.filter_by(id=reservationId).first()
@@ -287,7 +301,14 @@ class ReservationId(Resource):
         # Check that the api-key corresponds to the user.
         if apiKeyUser.id != userId:
             return Response("The provided Api-key does not correspond to the userId provided.", status=401)
-
+        # Update reservation details
+        try:
+            reservationId = int(reservationId)
+            if reservationId <= 0:
+                return Response("Invalid reservationId parameter", status=400)
+        except ValueError:
+            return Response("Invalid reservationId parameter", status=400)
+        
         # Check that the reservation exists
         reservation = Reservation.query.filter_by(id=reservationId).first()
         if not reservation:
