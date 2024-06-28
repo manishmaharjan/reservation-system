@@ -65,3 +65,16 @@ Room.query.first()
 ```
 
 With that last line a Room object called 'Room 1' should be retrieved.
+
+Running unit test
+
+fron the root directory of the project run the following command
+
+```
+reservation-system git:(main) ✗ python -m unittest test/test-reservation.py
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.022s
+
+OK
+```
