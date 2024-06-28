@@ -1,15 +1,12 @@
 from src.models import User, ApiKey
 from test.test_config import client
 
-from src import db
 import json
 from src.models import User
 import pytest 
+from .utils import create_user
 
-def create_user(client, user_data):
-    """Helper function to create a user."""
-    response = client.post("/api/users/", json=user_data)
-    return response.headers.get('api_key'), response.headers.get('user_id')
+
 
 # Test case to create a user
 def test_create_user(client):
@@ -162,6 +159,18 @@ def test_create_user_duplicate_username(client):
     assert response.status_code == 409
     assert response.text == "Username already exists"
 
+def test_try_get_all_users(client):
+    api_key, user_id = create_user(client)
+    headers = {"Api-key": api_key}
+    response = client.get("/api/users/", headers=headers)
+    assert response.status_code == 401
+    assert response.data == b"The provided Api-key does not belong to an admin account"
+
+def test_try_get_all_users_inexsitent_key(client):
+    headers = {"Api-key-wrong": "invalid"}
+    response = client.get("/api/users/", headers=headers)
+    assert response.status_code == 401
+    assert response.data == b"The provided Api-key does not belong to an admin account"
 
 def test_get_all_users(client):
     """Test creating an admin user and then retrieving all users."""
@@ -350,9 +359,41 @@ def test_create_incorrect_json(client):
     assert resp.status_code == 400 
     assert resp.text == "Error parsing JSON data"
 
-def test_invalid_userid_parameter(client):
+
+def test_get_correct_api_wrong_user(client):
     user_data = {
         "username": "test_user",
         "email": "test_user@example.com"
     }
     api_key, user_id = create_user(client, user_data)
+
+    headers = {"api_key": api_key}
+    response = client.get(f"/api/users/1/", headers = headers)
+    assert response.status_code == 401
+    assert response.text == "The provided Api-key does not correspond to the userId provided."
+
+def test_put_correct_api_wrong_user(client):
+    user_data = {
+        "username": "test_user",
+        "email": "test_user@example.com"
+    }
+    api_key, user_id = create_user(client, user_data)
+
+    headers = {"api_key": api_key}
+    response = client.put(f"/api/users/1/", headers = headers, json = user_data)
+    assert response.status_code == 401
+    assert response.text == "The provided Api-key does not correspond to the userId provided."
+def test_no_username_no_email_provided(client):
+    user_data = {
+        "username": "test_user",
+        "email": "test_user@example.com"
+    }
+    api_key, user_id = create_user(client, user_data)
+
+    headers = {"api_key": api_key}
+    new_data = {"field":"data" }
+    response = client.put(f"/api/users/{user_id}/", headers = headers, json = new_data)
+
+    assert response.status_code == 400
+    assert response.text == "No username or email provided"
+
