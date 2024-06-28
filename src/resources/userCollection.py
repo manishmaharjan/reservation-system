@@ -117,13 +117,13 @@ class UserCollection(Resource):
           
         """
         if not request.is_json:
-            raise UnsupportedMediaType("Request must be in JSON format.")
+            return Response("Request must be in JSON format.", status= 415)
 
         try:
             data = request.get_json(force=True)  # Try to parse JSON data
             username = data.get("username")
             email = data.get("email")
-        except JSONDecodeError as e:
+        except:
             return Response(f"Error parsing JSON data", status=400)
 
 
