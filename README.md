@@ -43,6 +43,8 @@ cd src/
 flask run
 ```
 
+Swagger api documentation can be found at http://localhost:5000/apidocs/#/
+
 After that, to populate the database we will have to run the population script with the following command:
 
 ```
