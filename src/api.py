@@ -12,19 +12,27 @@ from .resources import reservation, reservationCollection,  userCollection, user
 
 app = create_app()
 
-swagger = Swagger(app)
 
-api = Api(app)
+def prepare_api(app):
+    '''
+    Function to configure the app on the test instance.
 
-app.url_map.converters["room"] = RoomConverter
+    '''
+    swagger = Swagger(app)
 
-api.add_resource(userCollection.UserCollection, "/api/users/")
-api.add_resource(user.UserId, "/api/users/<userId>/")
+    api = Api(app)
 
-api.add_resource(reservationCollection.ReservationCollection, "/api/users/<userId>/reservations/")
-api.add_resource(reservation.ReservationId, "/api/users/<userId>/reservations/<reservationId>/")
+    app.url_map.converters["room"] = RoomConverter
 
-api.add_resource(rooms_available.RoomsAvailable, "/api/rooms_available/")
+    api.add_resource(userCollection.UserCollection, "/api/users/")
+    api.add_resource(user.UserId, "/api/users/<userId>/")
+
+    api.add_resource(reservationCollection.ReservationCollection, "/api/users/<userId>/reservations/")
+    api.add_resource(reservation.ReservationId, "/api/users/<userId>/reservations/<reservationId>/")
+
+    api.add_resource(rooms_available.RoomsAvailable, "/api/rooms_available/")
+prepare_api(app)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
