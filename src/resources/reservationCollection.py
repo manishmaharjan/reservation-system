@@ -168,6 +168,11 @@ class ReservationCollection(Resource):
         responses:
           201:
             description: Reservation created successfully.
+            headers:
+              reservation_id:
+                description: The id of the newly created reservation.
+                schema:
+                  type: integer
             content:
               application/json:
                 schema:
