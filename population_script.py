@@ -7,13 +7,14 @@ from datetime import date, datetime, time
 from src.api import app
 from src.models import ApiKey, Reservation, Room, User, db
 
-def populate_db(test = False):
-    # Obtain the application context
-    app_ctx = app.app_context()
-    # Push the application context to activate it
-    app_ctx.push()
 
-    # Inside the context, perform database operations
+# Obtain the application context
+app_ctx = app.app_context()
+# Push the application context to activate it
+app_ctx.push()
+
+# Inside the context, perform database operations
+def populate_db( db, ctx,test = False):
     try:
         # Drop all existing tables
         db.drop_all()
@@ -25,7 +26,7 @@ def populate_db(test = False):
         user1 = User(username="user1", email="user1@example.com")
         user2 = User(username="user2", email="user2@example.com")
         admin = User(username="admin", email="admin@example.com")
-  
+
 
         # Create rooms
         room1 = Room(room_name="Room 1", capacity=10)
@@ -77,7 +78,6 @@ def populate_db(test = False):
         db.session.commit()
     finally:
         # Remove the application context when done
-        app_ctx.pop()
+        ctx.pop()
 
-if __name__ == "__main__":
-    populate_db()
+populate_db(db,app_ctx)
