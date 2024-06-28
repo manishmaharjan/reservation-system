@@ -207,14 +207,14 @@ class ReservationCollection(Resource):
         
         # Ensure correct json
         if not request.is_json:
-            raise Response("Request must be in JSON format.", status = 415)
+            return Response("Request must be in JSON format.", status = 415)
         try:
             data = request.get_json(force=True)  # Try to parse JSON data
             reservation_date = data.get("date")
             start_time = data.get("start-time")
             end_time = data.get("end-time")
             room_id = data.get("roomId")
-        except JSONDecodeError as e:
+        except :
             return Response(f"Error parsing JSON data", status=400)
         if not date or not start_time or not end_time or not room_id:
             return Response("date, start-time, end-time and roomId are required", status=400)
@@ -237,10 +237,8 @@ class ReservationCollection(Resource):
                 end_time.time() <= start_time.time()
             ):  # In case the reservation is on midnight
                 end_time += timedelta(days=1)
-                print("Terves")
-        except ValueError:
-            return Response(
-                "Invalid date or time format. Date format: YYYY-MM-DD. Time format: HH:MM",
+        except:
+            return Response("Invalid date or time format. Date format: YYYY-MM-DD. Time format: HH:MM",
                 status=400,
             )
         
@@ -280,7 +278,7 @@ class ReservationCollection(Resource):
         db.session.add(reservation)
         db.session.commit()
 
-        return Response("Reservation created successfully", status=201)
+        return Response("Reservation created successfully", headers={"reservation_id": reservation.id}, status=201)
 
 
 
