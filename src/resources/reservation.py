@@ -325,7 +325,7 @@ class ReservationId(Resource):
             start_time = data.get("start-time")
             end_time = data.get("end-time")
             room_id = data.get("roomId")
-        except JSONDecodeError as e:
+        except:
             return Response(f"Error parsing JSON data", status=400)
 
         if not reservation_date and not start_time and not end_time and not room_id:
@@ -397,7 +397,7 @@ class ReservationId(Resource):
                     end_time += timedelta(days=1)
             else:
                 end_time = datetime.combine(reservation_date, reservation.end_time.time())
-        except ValueError:
+        except:
             return Response("Invalid date or time format. Date format: YYYY-MM-DD. Time format: HH:MM", status=400)
 
         total_minutes = (end_time - start_time).total_seconds() // 60
