@@ -34,6 +34,7 @@ def set_sqlite_pragma(dbapi_connection, _connection_record=None):
 
 
 class User(db.Model):
+    # pylint: disable=too-few-public-methods
     """
     Represents a user in the reservation system.
 
@@ -55,6 +56,7 @@ class User(db.Model):
     api_keys = db.relationship(
         "ApiKey", back_populates="user", cascade="all, delete-orphan"
     )
+
     def serialize(self):
         """
         Serialize the user object into a dictionary.
@@ -62,15 +64,12 @@ class User(db.Model):
         Returns:
             dict: A dictionary representation of the user object.
         """
-        doc = {
-            "id": self.id,
-            "username": self.username,
-            "email": self.email
-        }
+        doc = {"id": self.id, "username": self.username, "email": self.email}
         return doc
 
 
 class Room(db.Model):
+    # pylint: disable=too-few-public-methods
     """
     Represents a room in the reservation system.
 
@@ -102,12 +101,13 @@ class Room(db.Model):
             "id": self.id,
             "room_name": self.room_name,
             "capacity": self.capacity,
-            "max_time": self.max_time
+            "max_time": self.max_time,
         }
         return doc
 
 
 class Reservation(db.Model):
+    # pylint: disable=too-few-public-methods
     """
     Represents a reservation made by a user for a specific room.
 
@@ -156,6 +156,7 @@ class Reservation(db.Model):
 # Got the code from
 # https://lovelace.oulu.fi/ohjelmoitava-web/ohjelmoitava-web/implementing-rest-apis-with-flask/#validating-keys
 class ApiKey(db.Model):
+    # pylint: disable=too-few-public-methods
     """
     Represents an API key in the reservation system.
 
@@ -192,7 +193,7 @@ class ApiKey(db.Model):
         """
         return hashlib.sha256(key.encode()).digest()
 
-    def create_token():
+    def create_token(self):
         """
         Generates a URL-safe token using the secrets module.
 

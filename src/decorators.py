@@ -1,14 +1,17 @@
 """
-This module contains decorators for verifying user authentication and authorization.
+This module contains decorators for
+verifying user authentication and authorization.
 
 Decorators:
-- require_admin: Checks if the user making the request is an admin.
-- require_user: Requires the user to be authenticated with a valid API key.
+- require_admin:
+Checks if the user making the request is an admin.
+- require_user:
+Requires the user to be authenticated with a valid API key.
 """
 
 from functools import wraps
 
-from flask import request, Response
+from flask import Response, request
 from werkzeug.exceptions import Unauthorized
 
 from src import db
@@ -29,16 +32,22 @@ def require_admin(func):
     Raises:
         Unauthorized: If the user is an admin or the API key is invalid.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
             key_hash = ApiKey.key_hash(request.headers.get("Api-key").strip())
             db_key = ApiKey.query.filter_by(key=key_hash).first()
         except Exception as exc:
-            return Response("The provided Api-key does not belong to an admin account", status = 401)
+            return Response(
+                "The provided Api-key does not belong to an admin account", status=401
+            )
         if db_key and db_key.admin:
             return func(*args, **kwargs)
-        return Response("The provided Api-key does not belong to an admin account", status = 401)
+        return Response(
+            "The provided Api-key does not belong to an admin account", status=401
+        )
+
     return wrapper
 
 
@@ -64,11 +73,10 @@ def require_user(func):
             key_hash = ApiKey.key_hash(request.headers.get("Api-key").strip())
             db_key = ApiKey.query.filter_by(key=key_hash).first()
         except Exception as exc:
-            return Response("Incorrect api key.", status = 401)
+            return Response("Incorrect api key.", status=401)
         if db_key:
             kwargs["apiKeyUser"] = db_key.user
             return func(*args, **kwargs)
-        return Response("Incorrect api key.", status = 401)
-
+        return Response("Incorrect api key.", status=401)
 
     return wrapper

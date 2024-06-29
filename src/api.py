@@ -8,7 +8,13 @@ from flask_restful import Api
 from src import create_app
 
 from .converters import RoomConverter
-from .resources import reservation, reservationCollection,  userCollection, user, rooms_available
+from .resources import (
+    reservation,
+    reservationCollection,
+    rooms_available,
+    user,
+    userCollection,
+)
 
 app = create_app()
 
@@ -21,8 +27,12 @@ app.url_map.converters["room"] = RoomConverter
 api.add_resource(userCollection.UserCollection, "/api/users/")
 api.add_resource(user.UserId, "/api/users/<userId>/")
 
-api.add_resource(reservationCollection.ReservationCollection, "/api/users/<userId>/reservations/")
-api.add_resource(reservation.ReservationId, "/api/users/<userId>/reservations/<reservationId>/")
+api.add_resource(
+    reservationCollection.ReservationCollection, "/api/users/<userId>/reservations/"
+)
+api.add_resource(
+    reservation.ReservationId, "/api/users/<userId>/reservations/<reservationId>/"
+)
 
 api.add_resource(rooms_available.RoomsAvailable, "/api/rooms_available/")
 
