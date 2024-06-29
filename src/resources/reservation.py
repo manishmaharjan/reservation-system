@@ -112,6 +112,12 @@ class ReservationId(Resource):
         # Check that the api-key corresponds to the user.
         if apiKeyUser.id != userId:
             return Response("The provided Api-key does not correspond to the userId provided.", status = 401)
+        try:
+            reservationId = int(reservationId)
+            if reservationId <= 0:
+                return Response("Invalid reservationId parameter", status=400)
+        except ValueError:
+            return Response("Invalid reservationId parameter", status=400)
         
         # Check that the reservation exists
         reservation = Reservation.query.filter_by(id = reservationId).first()
@@ -186,6 +192,14 @@ class ReservationId(Resource):
         # Check that the api-key corresponds to the user.
         if (apiKeyUser.id != userId):
             return Response("The provided Api-key does not correspond to the userId provided.", status=401)
+        
+        # Check correct reservationId
+        try:
+            reservationId = int(reservationId)
+            if reservationId <= 0:
+                return Response("Invalid reservationId parameter", status=400)
+        except ValueError:
+            return Response("Invalid reservationId parameter", status=400)
 
         # Check that the reservation exists
         reservation = Reservation.query.filter_by(id=reservationId).first()
@@ -287,7 +301,14 @@ class ReservationId(Resource):
         # Check that the api-key corresponds to the user.
         if apiKeyUser.id != userId:
             return Response("The provided Api-key does not correspond to the userId provided.", status=401)
-
+        # Update reservation details
+        try:
+            reservationId = int(reservationId)
+            if reservationId <= 0:
+                return Response("Invalid reservationId parameter", status=400)
+        except ValueError:
+            return Response("Invalid reservationId parameter", status=400)
+        
         # Check that the reservation exists
         reservation = Reservation.query.filter_by(id=reservationId).first()
         if not reservation:
@@ -304,7 +325,7 @@ class ReservationId(Resource):
             start_time = data.get("start-time")
             end_time = data.get("end-time")
             room_id = data.get("roomId")
-        except JSONDecodeError as e:
+        except:
             return Response(f"Error parsing JSON data", status=400)
 
         if not reservation_date and not start_time and not end_time and not room_id:
@@ -314,47 +335,6 @@ class ReservationId(Resource):
             room = Room.query.filter_by(id=room_id).first()
             if not room:
                 return Response("No room found with the provided room id.", status=404)
-        else:
-            room = reservation.room
-
-        # Update reservation details
-        try:
-            userId = int(userId)
-            if userId <= 0:
-                return Response("Invalid userId parameter", status=400)
-        except ValueError:
-            return Response("Invalid userId parameter", status=400)
-
-        # Check that the api-key corresponds to the user.
-        if (apiKeyUser.id != userId):
-            return Response("The provided Api-key does not correspond to the userId provided.", status=401)
-
-        # Check that the reservation exists
-        reservation = Reservation.query.filter_by(id=reservationId).first()
-        if not reservation:
-            return Response("No reservation found with the provided reservationId.", status=404)
-        if reservation.user_id != userId:
-            return Response("Reservation does not belong to the provided userId.", status=403)
-
-        # Ensure correct json
-        if not request.is_json:
-            return Response("Request must be in JSON format.", status=415)
-        try:
-            data = request.get_json(force=True)  # Try to parse JSON data
-            reservation_date = data.get("date")
-            start_time = data.get("start-time")
-            end_time = data.get("end-time")
-            room_id = data.get("roomId")
-        except JSONDecodeError as e:
-            return Response(f"Error parsing JSON data", status=400)
-
-        if not reservation_date and not start_time and not end_time and not room_id:
-            return Response("At least one of date, start-time, end-time, or roomId is required.", status=400)
-
-        if room_id:
-            room = Room.query.filter_by(id=room_id).first()
-            if not room:
-                return Response("No room found with the provided roomId.", status=404)
         else:
             room = reservation.room
 
@@ -376,7 +356,7 @@ class ReservationId(Resource):
                     end_time += timedelta(days=1)
             else:
                 end_time = datetime.combine(reservation_date, reservation.end_time.time())
-        except ValueError:
+        except:
             return Response("Invalid date or time format. Date format: YYYY-MM-DD. Time format: HH:MM", status=400)
 
         total_minutes = (end_time - start_time).total_seconds() // 60

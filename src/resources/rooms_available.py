@@ -119,7 +119,7 @@ class RoomsAvailable(Resource):
 
         try:
             search_datetime = datetime.strptime(date + ' ' + time, '%Y-%m-%d %H:%M')
-        except ValueError:
+        except:
             return Response("Invalid date or time format. Use YYYY-MM-DD for date and HH:MM for time.", status = 400)
 
         if duration:
