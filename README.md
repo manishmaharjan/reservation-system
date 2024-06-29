@@ -78,3 +78,13 @@ Ran 3 tests in 0.022s
 
 OK
 ```
+
+Running test coverage. Make sure to install pytest and pytest-cov
+
+```
+pip install pytest pytest-cov
+```
+
+```
+pytest --cov-report term-missing --cov=src
+```

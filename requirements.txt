@@ -6,3 +6,5 @@ pytest
 flasgger
 Flask-Testing
 self
+pytest
+pytest-cov
