@@ -8,3 +8,4 @@ Flask-Testing
 self
 pytest
 pytest-cov
+pylint
