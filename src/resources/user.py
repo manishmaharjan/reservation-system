@@ -24,6 +24,26 @@ from ..decorators import require_user
 from ..models import ApiKey, User
 
 
+def validate_user_id(userId):
+    """
+    Validate the userId parameter.
+
+    Args:
+        userId (str): The unique identifier of the user.
+
+    Returns:
+        tuple: (bool, Response) A tuple containing a boolean indicating
+        whether the userId is valid and a Response object if invalid.
+    """
+    try:
+        userId = int(userId)
+        if userId <= 0:
+            return False, Response("Invalid userId parameter", status=400)
+    except ValueError:
+        return False, Response("Invalid userId parameter", status=400)
+    return True, userId
+
+
 class UserId(Resource):
     """
     Resource class for seeing, modifying and deleting existing users. Implementing
@@ -91,12 +111,9 @@ class UserId(Resource):
               description: Not Found - No user exists with the specified userId.
 
         """
-        try:
-            userId = int(userId)
-            if userId <= 0:
-                return Response("Invalid userId parameter", status=400)
-        except ValueError:
-            return Response("Invalid userId parameter", status=400)
+        is_valid, response = validate_user_id(userId)
+        if not is_valid:
+            return response
 
         user = User.query.filter_by(id=userId).first()
         if user is None:
@@ -167,35 +184,32 @@ class UserId(Resource):
             Conflict - The email provided is in an incorrect format
                         or the username already exists.
         """
+        is_valid, response = validate_user_id(userId)
+        if not is_valid:
+            return response
+
+        user = User.query.filter_by(id=userId).first()
+        if user is None:
+            return Response("User not found", status=404)
+        # Check that the api-key corresponds to the user.
+        if apiKeyUser.id != userId:
+            return Response(
+                "The provided Api-key does not correspond to the userId provided.",
+                status=401,
+            )
+        data = request.get_json()
+        if "username" in data:
+            user.username = data["username"]
+
+        if "email" in data:
+            if not is_valid_email(data["email"]):
+                return Response("Incorrect email format", status=409)
+            user.email = data["email"]
+
+        if "username" not in data and "email" not in data:
+            return Response("No username or email provided", status=400)
+
         try:
-            try:
-                userId = int(userId)
-                if userId <= 0:
-                    return Response("Invalid userId parameter", status=400)
-            except ValueError:
-                return Response("Invalid userId parameter", status=400)
-
-            user = User.query.filter_by(id=userId).first()
-            if user is None:
-                return Response("User not found", status=404)
-            # Check that the api-key corresponds to the user.
-            if apiKeyUser.id != userId:
-                return Response(
-                    "The provided Api-key does not correspond to the userId provided.",
-                    status=401,
-                )
-            data = request.get_json()
-            if "username" in data:
-                user.username = data["username"]
-
-            if "email" in data:
-                if not is_valid_email(data["email"]):
-                    return Response("Incorrect email format", status=409)
-                user.email = data["email"]
-
-            if "username" not in data and "email" not in data:
-                return Response("No username or email provided", status=400)
-
             db.session.commit()
             return Response("User updated successfully", status=200)
 
@@ -236,12 +250,9 @@ class UserId(Resource):
           404:
             description: Not Found - No user exists with the specified userId.
         """
-        try:
-            userId = int(userId)
-            if userId <= 0:
-                return Response("Invalid userId parameter", status=400)
-        except ValueError:
-            return Response("Invalid userId parameter", status=400)
+        is_valid, response = validate_user_id(userId)
+        if not is_valid:
+            return response
 
         user = User.query.filter_by(id=userId).first()
         if user is None:

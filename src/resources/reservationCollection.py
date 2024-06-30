@@ -17,11 +17,9 @@ Classes:
 """
 
 from datetime import date, datetime, timedelta
-from json import JSONDecodeError
 
 from flask import Response, request
 from flask_restful import Resource
-from werkzeug.exceptions import UnsupportedMediaType
 
 from src import db
 
@@ -51,6 +49,14 @@ class ReservationCollection(Resource):
         registering a new user.
 
     """
+
+    def validate_user_id(self, userId):
+        try:
+            userId = int(userId)
+            if userId <= 0:
+                return Response("Invalid userId parameter", status=400)
+        except ValueError:
+            return Response("Invalid userId parameter", status=400)
 
     @require_user
     def get(self, apiKeyUser, userId):
@@ -116,12 +122,7 @@ class ReservationCollection(Resource):
         """
 
         # Check that the userId parameter is correct
-        try:
-            userId = int(userId)
-            if userId <= 0:
-                return Response("Invalid userId parameter", status=400)
-        except ValueError:
-            return Response("Invalid userId parameter", status=400)
+        self.validate_user_id(userId)
 
         # Check that the api-key corresponds to the user.
         if apiKeyUser.id != userId:
@@ -229,12 +230,7 @@ class ReservationCollection(Resource):
         """
 
         # Check that the userId parameter is correct
-        try:
-            userId = int(userId)
-            if userId <= 0:
-                return Response("Invalid userId parameter", status=400)
-        except ValueError:
-            return Response("Invalid userId parameter", status=400)
+        self.validate_user_id(userId)
 
         # Check that the api-key corresponds to the user.
         if apiKeyUser.id != userId:
@@ -252,7 +248,7 @@ class ReservationCollection(Resource):
             start_time = data.get("start-time")
             end_time = data.get("end-time")
             room_id = data.get("roomId")
-        except:
+        except Exception as e:
             return Response(f"Error parsing JSON data", status=400)
         if not date or not start_time or not end_time or not room_id:
             return Response(
@@ -277,7 +273,7 @@ class ReservationCollection(Resource):
                 end_time.time() <= start_time.time()
             ):  # In case the reservation is on midnight
                 end_time += timedelta(days=1)
-        except:
+        except Exception as e:
             return Response(
                 "Invalid date or time format. Date format: YYYY-MM-DD. Time format: HH:MM",
                 status=400,
