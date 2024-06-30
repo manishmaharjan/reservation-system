@@ -192,8 +192,8 @@ class ApiKey(db.Model):
 
         """
         return hashlib.sha256(key.encode()).digest()
-
-    def create_token(self):
+    @staticmethod
+    def create_token():
         """
         Generates a URL-safe token using the secrets module.
 

@@ -13,7 +13,7 @@ from functools import wraps
 
 from flask import Response, request
 
-from models import ApiKey
+from .models import ApiKey
 
 
 # Function to verify if the request comes from an admin righted user

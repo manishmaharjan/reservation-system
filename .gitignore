@@ -6,3 +6,6 @@ instance/reservation_system.db
 .ruff_cache
 .idea
 venv
+test/__pycache__/
+__pycache__/
+.coverage

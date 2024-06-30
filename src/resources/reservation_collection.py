@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 
 from flask import Response, request
 from flask_restful import Resource
-from reservation import (
+from .reservation import (
     check_overlapping_reservations,
     check_reservation_duration_and_overlap,
     validate_user_id,
