@@ -12,10 +12,8 @@ Requires the user to be authenticated with a valid API key.
 from functools import wraps
 
 from flask import Response, request
-from werkzeug.exceptions import Unauthorized
 
-from src import db
-from src.models import ApiKey
+from models import ApiKey
 
 
 # Function to verify if the request comes from an admin righted user
@@ -60,7 +58,7 @@ def require_user(func):
         func (callable): The function to be decorated.
 
     Returns:
-        callable: The decorated function, with the user object as "apiKeyUser".
+        callable: The decorated function, with the user object as "api_key_user".
 
     Raises:
         Unauthorized: If the user is not authenticated or the API key is invalid.
@@ -75,7 +73,7 @@ def require_user(func):
         except Exception as exc:
             return Response("Incorrect api key.", status=401)
         if db_key:
-            kwargs["apiKeyUser"] = db_key.user
+            kwargs["api_key_user"] = db_key.user
             return func(*args, **kwargs)
         return Response("Incorrect api key.", status=401)
 

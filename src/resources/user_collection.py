@@ -18,15 +18,12 @@ Functions:
 """
 
 import re
-from json import JSONDecodeError
 
 from flask import Response, request
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
-from werkzeug.exceptions import UnsupportedMediaType
 
-from src import db
-
+from .. import db
 from ..decorators import require_admin, require_user
 from ..models import ApiKey, User
 

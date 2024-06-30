@@ -14,7 +14,7 @@ import secrets
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
-from src import db
+from . import db
 
 
 @event.listens_for(Engine, "connect")

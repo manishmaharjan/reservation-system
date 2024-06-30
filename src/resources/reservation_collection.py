@@ -16,13 +16,17 @@ Classes:
 
 """
 
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from flask import Response, request
 from flask_restful import Resource
+from reservation import (
+    check_overlapping_reservations,
+    check_reservation_duration_and_overlap,
+    validate_user_id,
+)
 
-from src import db
-
+from .. import db
 from ..decorators import require_user
 from ..models import Reservation, Room
 
@@ -30,12 +34,12 @@ from ..models import Reservation, Room
 class ReservationCollection(Resource):
     """
     Resource class for creating a new reservation or getting a
-    list of all the reservations of an user.
+    list of all the reservations of a user.
 
     This class handles the POST request for creating a new reservation.
     It expects JSON data containing the date, time and id of the room.
     It checks that there is no other reservation
-    at that time and date in that room, and thenc reates the reservation object.
+    at that time and date in that room, and then creates the reservation object.
     It also handles a GET request which gets a list
     of all the reservations of the user, and returns it.
 
@@ -43,33 +47,58 @@ class ReservationCollection(Resource):
         None
 
     Methods:
-        get(userId): Handles the GET request for returning
+        get(user_id): Handles the GET request for returning
         a list with all the reservations of the user.
-        post(userId): Handles the POST request for
+        post(user_id): Handles the POST request for
         registering a new user.
 
     """
 
-    def validate_user_id(self, userId):
+    def check_api_key_user(self, api_key_user, user_id):
+        """
+        Check that the api-key corresponds to the user.
+
+        Args:
+            api_key_user (User): The user associated with the provided API key.
+            user_id (int): The unique identifier of the user.
+
+        Returns:
+            Response: An error response if the API key does not match the user_id, None otherwise.
+        """
+        if api_key_user.id != user_id:
+            return Response(
+                "The provided Api-key does not correspond to the user_id provided.",
+                status=401,
+            )
+        return None
+
+    def validate_and_parse_json(self):
+        """
+        Ensure the request body is in JSON format and parse the JSON data.
+
+        Returns:
+            tuple: Parsed JSON data and an error response if the JSON is invalid.
+        """
+        if not request.is_json:
+            return None, Response("Request must be in JSON format.", status=415)
         try:
-            userId = int(userId)
-            if userId <= 0:
-                return Response("Invalid userId parameter", status=400)
-        except ValueError:
-            return Response("Invalid userId parameter", status=400)
+            data = request.get_json(force=True)  # Try to parse JSON data
+            return data, None
+        except Exception:
+            return None, Response("Error parsing JSON data", status=400)
 
     @require_user
-    def get(self, apiKeyUser, userId):
+    def get(self, api_key_user, user_id):
         """
         Retrieve all reservations for a given user.
 
         This method handles GET requests to retrieve all
         reservations associated with a specific user.
         The request must include a valid API key in the header,
-        and the API key must correspond to the userId provided.
+        and the API key must correspond to the user_id provided.
 
         Args:
-            userId (int): The unique identifier of the user for
+            user_id (int): The unique identifier of the user for
             whom reservations are being retrieved.
 
         Returns:
@@ -115,42 +144,42 @@ class ReservationCollection(Resource):
                         description: The time span of the reservation.
                         example: "10:00:00 - 11:00:00"
           400:
-            description: Invalid userId parameter.
+            description: Invalid user_id parameter.
           401:
             description: The provided API key
-            does not correspond to the userId provided.
+            does not correspond to the user_id provided.
         """
 
-        # Check that the userId parameter is correct
-        self.validate_user_id(userId)
+        # Validate user_id parameter
+        response = validate_user_id(user_id)
+        if response:
+            return response
 
-        # Check that the api-key corresponds to the user.
-        if apiKeyUser.id != userId:
-            return Response(
-                "The provided Api-key does not correspond to the userId provided.",
-                status=401,
-            )
+        # Check that the API key corresponds to the user
+        response = self.check_api_key_user(api_key_user, user_id)
+        if response:
+            return response
 
-        reservation_list = [r.serialize() for r in apiKeyUser.reservations]
+        reservation_list = [r.serialize() for r in api_key_user.reservations]
 
         return reservation_list, 200
 
     @require_user
-    def post(self, apiKeyUser, userId):
+    def post(self, api_key_user, user_id):
         """
         Create a new reservation for a given user.
 
         This method handles POST requests to create
         a new reservation for a specific user.
         The request must include a valid API key in the header,
-        and the API key must correspond to the userId provided.
+        and the API key must correspond to the user_id provided.
         The reservation details (date, start-time, end-time,
         roomId) must be provided in the request body in JSON format.
 
         Args:
-            apiKeyUser (User): The user associated
+            api_key_user (User): The user associated
             with the provided API key.
-            userId (int): The unique identifier of the
+            user_id (int): The unique identifier of the
             user for whom the reservation is being created.
 
         Returns:
@@ -215,11 +244,11 @@ class ReservationCollection(Resource):
                       type: string
                       example: "Reservation created successfully"
           400:
-            description: Invalid userId parameter,
+            description: Invalid user_id parameter,
             or missing/invalid reservation details.
           401:
             description: The provided API key
-            does not correspond to the userId provided.
+            does not correspond to the user_id provided.
           404:
             description: No room found with the roomId provided.
           409:
@@ -229,33 +258,33 @@ class ReservationCollection(Resource):
             description: The request body must be in JSON format.
         """
 
-        # Check that the userId parameter is correct
-        self.validate_user_id(userId)
+        # Validate user_id parameter
+        response = validate_user_id(user_id)
+        if response:
+            return response
 
-        # Check that the api-key corresponds to the user.
-        if apiKeyUser.id != userId:
-            return Response(
-                "The provided Api-key does not correspond to the userId provided.",
-                status=401,
-            )
+        # Check that the API key corresponds to the user
+        response = self.check_api_key_user(api_key_user, user_id)
+        if response:
+            return response
 
-        # Ensure correct json
-        if not request.is_json:
-            return Response("Request must be in JSON format.", status=415)
-        try:
-            data = request.get_json(force=True)  # Try to parse JSON data
-            reservation_date = data.get("date")
-            start_time = data.get("start-time")
-            end_time = data.get("end-time")
-            room_id = data.get("roomId")
-        except Exception as e:
-            return Response(f"Error parsing JSON data", status=400)
-        if not date or not start_time or not end_time or not room_id:
+        # Ensure the request body is in JSON format and parse the JSON data
+        data, response = self.validate_and_parse_json()
+        if response:
+            return response
+
+        # Extract reservation details from parsed data
+        reservation_date = data.get("date")
+        start_time = data.get("start-time")
+        end_time = data.get("end-time")
+        room_id = data.get("roomId")
+
+        if not reservation_date or not start_time or not end_time or not room_id:
             return Response(
                 "date, start-time, end-time and roomId are required", status=400
             )
 
-        # Check that the room id corresponds to a room
+        # Check that the room ID corresponds to a room
         room = Room.query.filter_by(id=room_id).first()
         if not room:
             return Response("No room found with the provided room id.", status=404)
@@ -273,44 +302,27 @@ class ReservationCollection(Resource):
                 end_time.time() <= start_time.time()
             ):  # In case the reservation is on midnight
                 end_time += timedelta(days=1)
-        except Exception as e:
+        except Exception:
             return Response(
                 "Invalid date or time format. Date format: YYYY-MM-DD. Time format: HH:MM",
                 status=400,
             )
 
         if start_time < datetime.now():
-            return Response("Can not book past time slots", status=409)
+            return Response("Cannot book past time slots", status=409)
 
-        total_minutes = (end_time - start_time).total_seconds() // 60
+        response = check_reservation_duration_and_overlap(room, start_time, end_time)
+        if response:
+            return response
 
-        if total_minutes > room.max_time:
-            return Response("Reservation is too long.", status=409)
+        # Check for overlapping reservations
+        response = check_overlapping_reservations(room, start_time, end_time)
+        if response:
+            return response
 
-        overlaping_reservations = Reservation.query.filter(
-            (Reservation.room == room)
-            & (
-                (
-                    (Reservation.start_time >= start_time)
-                    & (Reservation.start_time <= end_time)
-                )
-                | (  # If a reservation starts in the timespan
-                    (Reservation.end_time >= start_time)
-                    & (Reservation.end_time <= end_time)
-                )
-                | (  # If a reservation ends in the timespan
-                    (Reservation.start_time <= start_time)
-                    & (Reservation.end_time >= end_time)
-                )  # If the whole timespan is already booked
-            )
-        ).all()
-
-        if overlaping_reservations:
-            return Response("Time slot already taken", status=409)
-
-        # Create and insert the object
+        # Create and insert the reservation object
         reservation = Reservation(
-            room=room, user=apiKeyUser, start_time=start_time, end_time=end_time
+            room=room, user=api_key_user, start_time=start_time, end_time=end_time
         )
         db.session.add(reservation)
         db.session.commit()

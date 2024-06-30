@@ -11,8 +11,8 @@ class UserClient:
         )
         if response.status_code == 201:
             api_key = response.headers.get("api_key")
-            userId = response.headers.get("user_id")
-            return {"user_id": userId, "api_key": api_key}
+            user_id = response.headers.get("user_id")
+            return {"user_id": user_id, "api_key": api_key}
         else:
             return f"{response.status_code} - {response.text}"
 

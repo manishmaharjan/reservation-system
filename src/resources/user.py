@@ -5,43 +5,37 @@ The User resource is responsible for handling the modifications,
 deletions and retrievals of existing users.
 
 Classes:
-    UserId: A resource class for seeing, modifying and deleting existing users.
-
+    UserResource: A resource class for seeing, modifying, and deleting existing users.
 """
-
-import re
-from json import JSONDecodeError
 
 from flask import Response, request
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
-from werkzeug.exceptions import UnsupportedMediaType
 
-from src import db
-from src.resources.userCollection import is_valid_email
-
+from .. import db
 from ..decorators import require_user
-from ..models import ApiKey, User
+from ..models import User
+from .user_collection import is_valid_email
 
 
-def validate_user_id(userId):
+def validate_user_id(user_id):
     """
-    Validate the userId parameter.
+    Validate the user_id parameter.
 
     Args:
-        userId (str): The unique identifier of the user.
+        user_id (str): The unique identifier of the user.
 
     Returns:
         tuple: (bool, Response) A tuple containing a boolean indicating
-        whether the userId is valid and a Response object if invalid.
+        whether the user_id is valid and a Response object if invalid.
     """
     try:
-        userId = int(userId)
-        if userId <= 0:
-            return False, Response("Invalid userId parameter", status=400)
+        user_id = int(user_id)
+        if user_id <= 0:
+            return False, Response("Invalid user_id parameter", status=400)
     except ValueError:
-        return False, Response("Invalid userId parameter", status=400)
-    return True, userId
+        return False, Response("Invalid user_id parameter", status=400)
+    return True, user_id
 
 
 class UserId(Resource):
@@ -57,18 +51,18 @@ class UserId(Resource):
         None
 
     Methods:
-        get(userId): Handle GET requests to retrieve information about a specific user.
-        put(userId): Handle PUT requests to update information about a specific user.
-        delete(userId): Handle DELETE requests to remove a specific user.
+        get(user_id): Handle GET requests to retrieve information about a specific user.
+        put(user_id): Handle PUT requests to update information about a specific user.
+        delete(user_id): Handle DELETE requests to remove a specific user.
     """
 
     @require_user
-    def get(self, apiKeyUser, userId):
+    def get(self, api_key_user, user_id):
         """
         Handle GET requests to retrieve information about a specific user.
 
         Args:
-            userId (int): The unique identifier of the user.
+            user_id (int): The unique identifier of the user.
 
         Returns:
             Response: The response object containing user
@@ -80,7 +74,7 @@ class UserId(Resource):
             - User
         parameters:
             - in: path
-              name: userId
+              name: user_id
               schema:
                 type: integer
                 required: true
@@ -93,7 +87,7 @@ class UserId(Resource):
                   schema:
                     type: object
                     properties:
-                      userId:
+                      user_id:
                         type: integer
                         description: The unique identifier of the user
                       username:
@@ -103,25 +97,25 @@ class UserId(Resource):
                         type: string
                         description: The user's email address
             400:
-              description: Bad Request - The userId parameter is missing or invalid.
+              description: Bad Request - The user_id parameter is missing or invalid.
             401:
               description: Unauthorized -
-              The provided api-key does not belong to the userId provided.
+              The provided api-key does not belong to the user_id provided.
             404:
-              description: Not Found - No user exists with the specified userId.
+              description: Not Found - No user exists with the specified user_id.
 
         """
-        is_valid, response = validate_user_id(userId)
+        is_valid, response = validate_user_id(user_id)
         if not is_valid:
             return response
 
-        user = User.query.filter_by(id=userId).first()
+        user = User.query.filter_by(id=user_id).first()
         if user is None:
             return Response("User not found", status=404)
         # Check that the api-key corresponds to the user.
-        if apiKeyUser.id != userId:
+        if api_key_user.id != user_id:
             return Response(
-                "The provided Api-key does not correspond to the userId provided.",
+                "The provided Api-key does not correspond to the user_id provided.",
                 status=401,
             )
 
@@ -129,12 +123,12 @@ class UserId(Resource):
         return user_data, 200
 
     @require_user
-    def put(self, apiKeyUser, userId):
+    def put(self, api_key_user, user_id):
         """
         Handle PUT requests to update information about a specific user.
 
         Args:
-            userId (int): The unique identifier of the user.
+            user_id (int): The unique identifier of the user.
 
         Returns:
             Response: The response object containing
@@ -146,7 +140,7 @@ class UserId(Resource):
           - User
         parameters:
             - in: path
-              name: userId
+              name: user_id
               schema:
                 type: integer
                 required: true
@@ -171,30 +165,30 @@ class UserId(Resource):
             User updated successfully.
           400:
             description:
-            Bad Request - The userId parameter is missing or invalid,
+            Bad Request - The user_id parameter is missing or invalid,
                         or no username or email provided.
           401:
             description:
-            Unauthorized - The provided api-key does not belong to the userId provided.
+            Unauthorized - The provided api-key does not belong to the user_id provided.
           404:
             description:
-            Not Found - No user exists with the specified userId.
+            Not Found - No user exists with the specified user_id.
           409:
             description:
             Conflict - The email provided is in an incorrect format
                         or the username already exists.
         """
-        is_valid, response = validate_user_id(userId)
+        is_valid, response = validate_user_id(user_id)
         if not is_valid:
             return response
 
-        user = User.query.filter_by(id=userId).first()
+        user = User.query.filter_by(id=user_id).first()
         if user is None:
             return Response("User not found", status=404)
         # Check that the api-key corresponds to the user.
-        if apiKeyUser.id != userId:
+        if api_key_user.id != user_id:
             return Response(
-                "The provided Api-key does not correspond to the userId provided.",
+                "The provided Api-key does not correspond to the user_id provided.",
                 status=401,
             )
         data = request.get_json()
@@ -218,12 +212,12 @@ class UserId(Resource):
             return Response("Username already exists", status=409)
 
     @require_user
-    def delete(self, apiKeyUser, userId):
+    def delete(self, api_key_user, user_id):
         """
         Handle DELETE requests to remove a specific user.
 
         Args:
-            userId (int): The unique identifier of the user.
+            user_id (int): The unique identifier of the user.
 
         Returns:
             Response:
@@ -235,7 +229,7 @@ class UserId(Resource):
           - User
         parameters:
           - in: path
-            name: userId
+            name: user_id
             schema:
               type: integer
               required: true
@@ -244,24 +238,25 @@ class UserId(Resource):
           200:
             description: User deleted successfully.
           400:
-            description: Bad Request - The userId parameter is missing or invalid.
+            description: Bad Request - The user_id parameter is missing or invalid.
           401:
-            description: Unauthorized - The provided api-key does not belong to the userId provided.
+            description:
+            Unauthorized - The provided api-key does not belong to the user_id provided.
           404:
-            description: Not Found - No user exists with the specified userId.
+            description: Not Found - No user exists with the specified user_id.
         """
-        is_valid, response = validate_user_id(userId)
+        is_valid, response = validate_user_id(user_id)
         if not is_valid:
             return response
 
-        user = User.query.filter_by(id=userId).first()
+        user = User.query.filter_by(id=user_id).first()
         if user is None:
             return Response("User not found", status=404)
 
         # Check that the api-key corresponds to the user.
-        if apiKeyUser.id != userId:
+        if api_key_user.id != user_id:
             return Response(
-                "The provided Api-key does not correspond to the userId provided.",
+                "The provided Api-key does not correspond to the user_id provided.",
                 status=401,
             )
 
