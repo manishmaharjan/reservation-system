@@ -83,3 +83,12 @@ pip install pytest pytest-cov
 ```
 pytest --cov-report term-missing --cov=src
 ```
+
+To run the Pylint, install pylint if it has not been installed
+```
+pip install pylint 
+```
+Then to run the pylint
+```
+pylint src
+```
