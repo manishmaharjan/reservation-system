@@ -65,7 +65,7 @@ class ReservationCollection(Resource):
         Returns:
             Response: An error response if the API key does not match the user_id, None otherwise.
         """
-        if api_key_user.id != user_id:
+        if api_key_user.id != int(user_id):
             return Response(
                 "The provided Api-key does not correspond to the user_id provided.",
                 status=401,
@@ -84,7 +84,7 @@ class ReservationCollection(Resource):
         try:
             data = request.get_json(force=True)  # Try to parse JSON data
             return data, None
-        except Exception:
+        except:
             return None, Response("Error parsing JSON data", status=400)
 
     @require_user
@@ -152,7 +152,7 @@ class ReservationCollection(Resource):
 
         # Validate user_id parameter
         response = validate_user_id(user_id)
-        if response:
+        if not isinstance(response, int):
             return response
 
         # Check that the API key corresponds to the user
@@ -260,7 +260,7 @@ class ReservationCollection(Resource):
 
         # Validate user_id parameter
         response = validate_user_id(user_id)
-        if response:
+        if not isinstance(response, int):
             return response
 
         # Check that the API key corresponds to the user
@@ -274,10 +274,13 @@ class ReservationCollection(Resource):
             return response
 
         # Extract reservation details from parsed data
-        reservation_date = data.get("date")
-        start_time = data.get("start-time")
-        end_time = data.get("end-time")
-        room_id = data.get("roomId")
+        try:
+          reservation_date = data.get("date")
+          start_time = data.get("start-time")
+          end_time = data.get("end-time")
+          room_id = data.get("roomId")
+        except:
+          return Response("Error parsing JSON data", status=400)
 
         if not reservation_date or not start_time or not end_time or not room_id:
             return Response(

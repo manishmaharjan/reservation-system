@@ -113,7 +113,7 @@ class UserId(Resource):
         if user is None:
             return Response("User not found", status=404)
         # Check that the api-key corresponds to the user.
-        if api_key_user.id != user_id:
+        if api_key_user.id != int(user_id):
             return Response(
                 "The provided Api-key does not correspond to the user_id provided.",
                 status=401,
@@ -186,7 +186,7 @@ class UserId(Resource):
         if user is None:
             return Response("User not found", status=404)
         # Check that the api-key corresponds to the user.
-        if api_key_user.id != user_id:
+        if api_key_user.id != int(user_id):
             return Response(
                 "The provided Api-key does not correspond to the user_id provided.",
                 status=401,
@@ -254,7 +254,7 @@ class UserId(Resource):
             return Response("User not found", status=404)
 
         # Check that the api-key corresponds to the user.
-        if api_key_user.id != user_id:
+        if api_key_user.id != int(user_id):
             return Response(
                 "The provided Api-key does not correspond to the user_id provided.",
                 status=401,

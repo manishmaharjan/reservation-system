@@ -16,10 +16,10 @@ def test_create_get_reservation(client):
     api_key, user_id = create_user(client)
     headers = {"Api_key": api_key}
     reservation_data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "10:00",
         "end-time": "11:30",
-        "roomId": 1,
+        "roomId": 1
     }
     response = client.post(
         f"/api/users/{user_id}/reservations/", json=reservation_data, headers=headers
@@ -91,10 +91,10 @@ def test_invalid_api_key(client):
     # Incorrect API key (randomly generated)
     headers = {"Api-key": "random_api_key"}
     reservation_data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "10:00",
         "end-time": "11:30",
-        "roomId": 1,
+        "roomId": 1
     }
 
     # Attempt to create a reservation with incorrect API key
@@ -111,10 +111,10 @@ def test_missing_api_key(client):
 
     # Omitting API key from headers
     reservation_data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "10:00",
         "end-time": "11:30",
-        "roomId": 1,
+        "roomId": 1
     }
 
     # Attempt to create a reservation without API key
@@ -566,10 +566,10 @@ def test_create_reservation(client):
 
     # Test valid reservation creation
     reservation_data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "10:00",
         "end-time": "11:30",
-        "roomId": 1,
+        "roomId": 1
     }
     response = client.post(
         f"/api/users/{user_id}/reservations/", json=reservation_data, headers=headers
@@ -591,7 +591,7 @@ def test_create_reservation(client):
 
     # Test no room found with the provided room id scenario
     invalid_room_reservation_data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "10:00",
         "end-time": "11:30",
         "roomId": 999,  # Assuming this room ID does not exist
@@ -609,7 +609,7 @@ def test_create_reservation(client):
         "date": "2020-06-30",  # Past date
         "start-time": "10:00",
         "end-time": "11:30",
-        "roomId": 1,
+        "roomId": 1
     }
     response = client.post(
         f"/api/users/{user_id}/reservations/",
@@ -617,14 +617,14 @@ def test_create_reservation(client):
         headers=headers,
     )
     assert response.status_code == 409
-    assert response.text == "Can not book past time slots"
+    assert response.text == "Cannot book past time slots"
 
     # Test reservation conflict scenario
     conflicting_reservation_data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "10:30",
         "end-time": "11:30",
-        "roomId": 1,
+        "roomId": 1
     }
     response = client.post(
         f"/api/users/{user_id}/reservations/",
@@ -650,10 +650,10 @@ def test_post_invalid_time_or_date(client):
     headers = {"Api-key": api_key}
 
     data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "11:00",
         "end-time": "akdm",
-        "roomId": 1,
+        "roomId": 1
     }
     response = client.post(
         f"/api/users/{user_id}/reservations/", headers=headers, json=data
@@ -669,7 +669,7 @@ def test_post_invalid_time_or_date(client):
         "date": "2024:0:1321",
         "start-time": "11:00",
         "end-time": "12:00",
-        "roomId": 1,
+        "roomId": 1
     }
     response = client.post(
         f"/api/users/{user_id}/reservations/", headers=headers, json=data
@@ -680,7 +680,7 @@ def test_post_invalid_time_or_date(client):
         == "Invalid date or time format. Date format: YYYY-MM-DD. Time format: HH:MM"
     )
 
-    data = {"date": "2024-06-30", "start-time": "p", "end-time": "22222", "roomId": 1}
+    data = {"date": "2024-07-30", "start-time": "p", "end-time": "22222", "roomId": 1}
     response = client.post(
         f"/api/users/{user_id}/reservations/", headers=headers, json=data
     )
@@ -693,7 +693,7 @@ def test_post_invalid_time_or_date(client):
         "date": "invalid",
         "start-time": "11:00",
         "end-time": "invalid",
-        "roomId": 1,
+        "roomId": 1
     }
     response = client.post(
         f"/api/users/{user_id}/reservations/", headers=headers, json=data
@@ -710,10 +710,10 @@ def test_post_time_slot_too_long(client):
     headers = {"Api-key": api_key}
 
     data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "11:00",
         "end-time": "15:00",
-        "roomId": 1,
+        "roomId": 1
     }
     response = client.post(
         f"/api/users/{user_id}/reservations/", headers=headers, json=data

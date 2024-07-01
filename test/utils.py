@@ -10,7 +10,7 @@ def create_user(client, user_data = {
     return response.headers.get('api_key'), response.headers.get('user_id')
 from datetime import datetime, timedelta
 
-def create_reservation(client, api_key, user_id, date = "2024-06-30",  start_time = "10:00", end_time = "11:30", roomId = 1):
+def create_reservation(client, api_key, user_id, date = "2024-07-30",  start_time = "10:00", end_time = "11:30", roomId = 1):
 
     reservation_data = {
         "date": date,
