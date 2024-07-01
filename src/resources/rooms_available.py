@@ -1,44 +1,60 @@
 """
-This module contains the implementation of the RoomsAvailable resource, as well as a helper function.
+This module contains the implementation of the
+RoomsAvailable resource, as well as a helper function.
 
-The RoomsAvailable resource is responsible for checking for available rooms in the specified date and time, with
-the specified duration. It also includes a helper function which checks if a room is available in a timespan.
+The RoomsAvailable resource is responsible for
+checking for available rooms in the specified date and time, with
+the specified duration. It also includes a helper
+function which checks if a room is available in a timespan.
 
 Classes:
-    RoomsAvailable: A resource class checking and returning the available rooms in th especified date and time with the specified duration.
+    RoomsAvailable: A resource class checking and returning
+    the available rooms in th especified date and time with the specified duration.
 
 Functions:
-    is_room_available: Helper function which returns if a room is available in a specific timespan.
+    is_room_available: Helper function which
+     returns if a room is available in a specific timespan.
 """
 
-from flask import request, Response
-from flask_restful import Resource
 from datetime import datetime, timedelta
-from ..models import db, Room, Reservation
+
+from flask import Response, request
+from flask_restful import Resource
+
+from ..models import Room
+
 
 class RoomsAvailable(Resource):
     """
-    Resource class for handling availability of rooms based on date, time and duration.
+    Resource class for handling availability of
+    rooms based on date, time and duration.
 
-    This class handles the GET request to check the availability of a room.
+    This class handles the GET request
+    to check the availability of a room.
 
-    Attrubutes: 
+    Attrubutes:
         None
-    
+
     Methods:
-        get(self): Handle GET request to retrieve available rooms based on date, time and duration.
+        get(self): Handle GET request to retrieve
+        available rooms based on date, time and duration.
     """
 
     def get(self):
         """
-        Retrieve available rooms based on the date, time and desired duration of the reservation.
-        
+        Retrieve available rooms based on the date,
+        time and desired duration of the reservation.
+
         This method handles GET requests to retrieve information about available rooms.
-        Having the date and time, it checks the availability of all the rooms in the database in that specific timespan, returning a list of all the available rooms. A duration parameter is optional,
-        and if it is not inputed, the maximun time of the room will be taken as the desired duration of the reservation.
-        
+        Having the date and time, it checks the
+        availability of all the rooms in the database in that specific timespan,
+        returning a list of all the available rooms. A duration parameter is optional,
+        and if it is not inputed, the maximun time of the
+        room will be taken as the desired duration of the reservation.
+
         Returns:
-            Response: JSON response with available rooms or an empty list if no rooms are available.
+            Response: JSON response with available
+            rooms or an empty list if no rooms are available.
         ---
         tags:
           - Rooms
@@ -105,30 +121,33 @@ class RoomsAvailable(Resource):
                           capacity: 9
                           max_time: 120
           400:
-            description: Bad Request - Invalid date, time, or duration parameter provided.
+            description:
+            Bad Request - Invalid date, time, or duration parameter provided.
         """
 
-
         # Parse query parameters
-        date = request.args.get('date')
-        time = request.args.get('time')
-        duration = request.args.get('duration')
+        date = request.args.get("date")
+        time = request.args.get("time")
+        duration = request.args.get("duration")
 
         if not date or not time:
-            return Response("date and time parameters are required.", status = 400)
+            return Response("date and time parameters are required.", status=400)
 
         try:
-            search_datetime = datetime.strptime(date + ' ' + time, '%Y-%m-%d %H:%M')
+            search_datetime = datetime.strptime(date + " " + time, "%Y-%m-%d %H:%M")
         except:
-            return Response("Invalid date or time format. Use YYYY-MM-DD for date and HH:MM for time.", status = 400)
+            return Response(
+                "Invalid date or time format. Use YYYY-MM-DD for date and HH:MM for time.",
+                status=400,
+            )
 
         if duration:
             try:
                 duration = int(duration)
                 if duration <= 0:
-                    return Response("Duration must be a positive integer.", status = 400)
+                    return Response("Duration must be a positive integer.", status=400)
             except ValueError:
-                return Response("Duration must be a positive integer.", status = 400)
+                return Response("Duration must be a positive integer.", status=400)
 
         # Query all rooms
         rooms = Room.query.all()
@@ -142,13 +161,10 @@ class RoomsAvailable(Resource):
                 available_rooms.append(room.serialize())
 
         # Example response format
-        response_data = {
-            "date": date,
-            "time": time,
-            "available_rooms": available_rooms
-        }
+        response_data = {"date": date, "time": time, "available_rooms": available_rooms}
 
         return response_data, 200
+
 
 def is_room_available(room, start_datetime, duration):
     """
@@ -170,10 +186,13 @@ def is_room_available(room, start_datetime, duration):
             return False
         end_datetime = start_datetime + timedelta(minutes=duration)
 
-
-    # Check if there are any reservations that overlap with the specified datetime range
+    # Check if there are any reservations
+    # that overlap with the specified datetime range
     for reservation in room.reservations:
-        if reservation.start_time < end_datetime and reservation.end_time > start_datetime:
+        if (
+            reservation.start_time < end_datetime
+            and reservation.end_time > start_datetime
+        ):
             return False
 
     return True
