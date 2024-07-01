@@ -66,18 +66,13 @@ Room.query.first()
 
 With that last line a Room object called 'Room 1' should be retrieved.
 
-Running unit test
 
-fron the root directory of the project run the following command
+To run the CLI client, the /src/client/client.py file has to be ran, with this command. (assuming we are in the parent folder)
 
 ```
-reservation-system git:(main) ✗ python -m unittest test/test-reservation.py
-...
-----------------------------------------------------------------------
-Ran 3 tests in 0.022s
-
-OK
+python src/client/client.py
 ```
+This will output more information about how to run the client.
 
 Running test coverage. Make sure to install pytest and pytest-cov
 

@@ -57,16 +57,20 @@ class ReservationClient:
             data["roomId"] = room_id
 
         response = requests.put(
-            f"{API_URL}/{user_id}/reservations/{reservation_id}/",
-            json=data,
-            headers=headers,
+            f"{API_URL}/users/{user_id}/reservations/{reservation_id}/",
+            json=data, 
+            headers=headers
         )
         return f"{response.status_code} - {response.text}"
-
+        
     @staticmethod
     def delete_reservation(user_id, reservation_id, api_key):
-        headers = {"Api-key": api_key}
+        headers = {'Api-key': api_key}
         response = requests.delete(
-            f"{API_URL}/{user_id}/reservations/{reservation_id}/", headers=headers
+            f"{API_URL}/users/{user_id}/reservations/{reservation_id}/", 
+            headers=headers
         )
-        return f"{response.status_code} - {response.text}"
+        return f'{response.status_code} - {response.text}'
+
+
+      

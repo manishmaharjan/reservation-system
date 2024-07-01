@@ -606,7 +606,7 @@ def test_create_reservation(client):
 
     # Test past time slot scenario
     past_time_reservation_data = {
-        "date": "2020-06-30",  # Past date
+        "date": "2020-07-30",  # Past date
         "start-time": "10:00",
         "end-time": "11:30",
         "roomId": 1

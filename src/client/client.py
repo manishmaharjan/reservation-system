@@ -1,5 +1,7 @@
 import argparse
+import sys
 
+from api.reservationClient import ReservationClient
 from api.availabilityClient import AvailabilityClient
 from api.reservationClient import ReservationClient
 from api.userClient import UserClient
@@ -345,6 +347,10 @@ def main():
     parser_get_available_rooms.set_defaults(func=get_available_rooms)
 
     # Parse arguments and execute the appropriate function
+        # Parse arguments and execute the appropriate function
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
     args = parser.parse_args()
     args.func(args)
 
