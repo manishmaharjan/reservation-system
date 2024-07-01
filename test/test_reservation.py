@@ -14,7 +14,7 @@ def test_create_get_reservation(client):
     api_key, user_id = create_user(client)
     headers = {"Api_key": api_key}
     reservation_data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "10:00",
         "end-time": "11:30",
         "roomId": 1
@@ -439,7 +439,7 @@ def test_create_reservation(client):
 
     # Test valid reservation creation
     reservation_data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "10:00",
         "end-time": "11:30",
         "roomId": 1
@@ -461,7 +461,7 @@ def test_create_reservation(client):
 
     # Test no room found with the provided room id scenario
     invalid_room_reservation_data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "10:00",
         "end-time": "11:30",
         "roomId": 999  # Assuming this room ID does not exist
@@ -472,7 +472,7 @@ def test_create_reservation(client):
 
     # Test past time slot scenario
     past_time_reservation_data = {
-        "date": "2020-06-30",  # Past date
+        "date": "2020-07-30",  # Past date
         "start-time": "10:00",
         "end-time": "11:30",
         "roomId": 1
@@ -483,7 +483,7 @@ def test_create_reservation(client):
 
     # Test reservation conflict scenario
     conflicting_reservation_data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "10:30",
         "end-time": "11:30",
         "roomId": 1
@@ -550,7 +550,7 @@ def test_post_time_slot_too_long(client):
     headers = {"Api-key": api_key}
 
     data = {
-        "date": "2024-06-30",
+        "date": "2024-07-30",
         "start-time": "11:00",
         "end-time": "15:00",
         "roomId": 1
